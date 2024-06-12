@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 void main() => runApp(MaterialApp(
-  home: Home()
+  home: Home(),
 ));
 
 class Home extends StatelessWidget {
+  const Home({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,34 +15,24 @@ class Home extends StatelessWidget {
           'FIRST APP',
           style: TextStyle(
             fontFamily: 'Caveat Variable',
-            color: Colors.white,
+            color: Colors.black,
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.red[400],
       ),
       body: Center(
-        child: Text(
-          'hello, my name is Ngoc',
-          style: TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-            color: Colors.red[400],
-            fontFamily: 'Caveat Variable',
-          ),
-        ),
+        child:
+        //Image.network('https://i5.walmartimages.com/seo/24x36-United-States-USA-US-Premier-Wall-Map-Paper-Folded_82a3e3b2-6590-4463-8b72-f603f6ec86aa.499cf7bb657e73df5a9d97ffff412cb9.jpeg'),
+        Image.asset('assets/map-1.jpg'),
       ),
       floatingActionButton: FloatingActionButton(
-        child: Text(
-          'click',
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
+        backgroundColor: Colors.yellow,
+        child: Icon(Icons.add),
         onPressed: () {},
-        backgroundColor: Colors.red,
       ),
     );
   }
 }
+
+
