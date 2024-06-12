@@ -15,7 +15,7 @@ class Home extends StatelessWidget {
           'FIRST APP',
           style: TextStyle(
             fontFamily: 'Caveat Variable',
-            color: Colors.black,
+            color: Colors.white,
           ),
         ),
         centerTitle: true,
@@ -23,8 +23,41 @@ class Home extends StatelessWidget {
       ),
       body: Center(
         child:
-        //Image.network('https://i5.walmartimages.com/seo/24x36-United-States-USA-US-Premier-Wall-Map-Paper-Folded_82a3e3b2-6590-4463-8b72-f603f6ec86aa.499cf7bb657e73df5a9d97ffff412cb9.jpeg'),
-        Image.asset('assets/map-1.jpg'),
+          ////TextButton(
+          // ElevatedButton(
+          //   onPressed: () {
+          //     print('clicked');
+          //   },
+          //   style: ElevatedButton.styleFrom(
+          //     backgroundColor: Colors.red[400],
+          //   ),
+          //   child: Text(
+          //     'Please Click!',
+          //     style: TextStyle(
+          //       fontFamily: 'Caveat Variable',
+          //       fontSize: 20,
+          //       color: Colors.black,
+          //     ),
+          //   ),
+          // ),
+
+          // ElevatedButton.icon(
+          //   onPressed: () {},
+          //   icon: Icon(Icons.cabin),
+          //   label: Text('cabin', style: TextStyle(color: Colors.white)),
+          //   style: ElevatedButton.styleFrom(
+          //     backgroundColor: Colors.red[400],
+          //     iconColor: Colors.white
+          //   ),
+          // ),
+
+        IconButton(
+          onPressed: () {
+            print('Cabin');
+          },
+          icon: Icon(Icons.cabin),
+          color: Colors.red[400],
+        )
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.yellow,
