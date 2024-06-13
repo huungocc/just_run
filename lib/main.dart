@@ -14,10 +14,31 @@ class QuoteList extends StatefulWidget {
 
 class _QuoteListState extends State<QuoteList> {
   List<Quote> quotes = [
-    Quote('quote 1', 'Tom'),
-    Quote('quote 2', 'Tim'),
-    Quote('quote 3', 'Hela'),
+    Quote('Hello I am Ngoc', 'Tom'),
+    Quote('Welcome to my app', 'Tim'),
+    Quote('I live in Ha Noi, Viet Nam', 'Hela'),
   ];
+
+  Widget QuoteTemplete(quote){
+    return Container(
+      width: double.infinity,
+      child: Card(
+        color: Colors.blueGrey[800],
+        margin: EdgeInsets.all(10),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(quote.text, style: TextStyle(color: Colors.amberAccent, fontSize: 20)),
+              Text(quote.author, style: TextStyle(color: Colors.white))
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +48,7 @@ class _QuoteListState extends State<QuoteList> {
         backgroundColor: Colors.blueGrey[800],
       ),
       body: Column(
-        children: quotes.map((quote) => Text('${quote.text} - ${quote.author}')).toList(),
+        children: quotes.map((quote) => QuoteTemplete(quote)).toList(),
       ),
     );
   }
