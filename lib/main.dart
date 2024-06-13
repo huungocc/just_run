@@ -1,56 +1,54 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(MaterialApp(
-  home: Home(),
-));
+void main() {
+  runApp(MaterialApp(
+    home: NgocCard(),
+  ));
+}
 
-class Home extends StatelessWidget {
-  const Home({super.key});
+class NgocCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blueGrey[900],
       appBar: AppBar(
-        title: Text(
-          'HUU NGOC',
-          style: TextStyle(
-            color: Colors.white,
-          ),
+        title:
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(Icons.credit_card, size: 38, color: Colors.grey[200]),
+            SizedBox(width: 10),
+            Text('ID Card', style: TextStyle(color: Colors.grey[200], fontWeight: FontWeight.bold)),
+          ],
         ),
-        //centerTitle: true,
-        backgroundColor: Colors.red[400],
+        backgroundColor: Colors.blueGrey[700],
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            flex: 2,
-            child: Container(
-              child:
-                Image.asset('assets/map-1.jpg', fit: BoxFit.cover)
+      body: Padding(
+        padding: EdgeInsets.all(30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: CircleAvatar(
+                backgroundImage: AssetImage('assets/ngoc_avt.png'),
+                radius: 70,
+              ),
             ),
-          ),
-          Container(
-            child:
-              ElevatedButton(
-                onPressed: (){},
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red[400]),
-                child: Text('This is a World Map', style: TextStyle(color: Colors.white)),
-              )
-          ),
-          Expanded(
-            flex: 1,
-            child: Container(
-              color: Colors.blueAccent[100],
-              height: 100,
+            Divider(
+              height: 60,
+              color: Colors.grey[700],
             ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.yellow,
-        child: Icon(Icons.add),
-        onPressed: () {},
+            Text('NAME  ', style: TextStyle(color: Colors.grey[400], fontSize: 15)),
+            Text('NGUYEN HUU NGOC', style: TextStyle(color: Colors.amberAccent, fontSize: 20, fontWeight: FontWeight.bold)),
+            SizedBox(height: 20),
+            Text('D.O.B', style: TextStyle(color: Colors.grey[400], fontSize: 15)),
+            Text('03/10/2003', style: TextStyle(color: Colors.amberAccent, fontSize: 20, fontWeight: FontWeight.bold)),
+            SizedBox(height: 20),
+            Text('ADDRESS', style: TextStyle(color: Colors.grey[400], fontSize: 15)),
+            Text('HA NOI, VIET NAM', style: TextStyle(color: Colors.amberAccent, fontSize: 20, fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
   }
