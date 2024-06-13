@@ -6,8 +6,14 @@ void main() {
   ));
 }
 
-class NgocCard extends StatelessWidget {
+class NgocCard extends StatefulWidget {
 
+  @override
+  State<NgocCard> createState() => _NgocCardState();
+}
+
+class _NgocCardState extends State<NgocCard> {
+  int level = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,13 +51,23 @@ class NgocCard extends StatelessWidget {
             Text('D.O.B', style: TextStyle(color: Colors.grey[400], fontSize: 15)),
             Text('03/10/2003', style: TextStyle(color: Colors.amberAccent, fontSize: 20, fontWeight: FontWeight.bold)),
             SizedBox(height: 20),
-            Text('ADDRESS', style: TextStyle(color: Colors.grey[400], fontSize: 15)),
-            Text('HA NOI, VIET NAM', style: TextStyle(color: Colors.amberAccent, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('LEVEL', style: TextStyle(color: Colors.grey[400], fontSize: 15)),
+            Text('$level', style: TextStyle(color: Colors.amberAccent, fontSize: 20, fontWeight: FontWeight.bold)),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: (){
+          setState((){
+            level ++;
+          });
+        },
+        backgroundColor: Colors.blueGrey[700],
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 }
+
 
 
