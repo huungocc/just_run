@@ -2,72 +2,32 @@ import 'package:flutter/material.dart';
 
 void main() {
   runApp(MaterialApp(
-    home: NgocCard(),
+    home: Quote(),
   ));
 }
 
-class NgocCard extends StatefulWidget {
-
+class Quote extends StatefulWidget {
   @override
-  State<NgocCard> createState() => _NgocCardState();
+  State<Quote> createState() => _QuoteState();
 }
 
-class _NgocCardState extends State<NgocCard> {
-  int level = 0;
+class _QuoteState extends State<Quote> {
+  List<String> quote = [
+    'My name is Ngoc',
+    'I was born in Viet Nam',
+    'I speak Vietnamese'
+  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueGrey[900],
+      backgroundColor: Colors.blueGrey,
       appBar: AppBar(
-        title:
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(Icons.credit_card, size: 38, color: Colors.grey[200]),
-            SizedBox(width: 10),
-            Text('ID Card', style: TextStyle(color: Colors.grey[200], fontWeight: FontWeight.bold)),
-          ],
-        ),
-        backgroundColor: Colors.blueGrey[700],
+        title: Text('Awesome Quotes', style: TextStyle(color: Colors.white),),
+        backgroundColor: Colors.blueGrey[800],
       ),
-      body: Padding(
-        padding: EdgeInsets.all(30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: CircleAvatar(
-                backgroundImage: AssetImage('assets/ngoc_avt.png'),
-                radius: 70,
-              ),
-            ),
-            Divider(
-              height: 60,
-              color: Colors.grey[700],
-            ),
-            Text('NAME  ', style: TextStyle(color: Colors.grey[400], fontSize: 15)),
-            Text('NGUYEN HUU NGOC', style: TextStyle(color: Colors.amberAccent, fontSize: 20, fontWeight: FontWeight.bold)),
-            SizedBox(height: 20),
-            Text('D.O.B', style: TextStyle(color: Colors.grey[400], fontSize: 15)),
-            Text('03/10/2003', style: TextStyle(color: Colors.amberAccent, fontSize: 20, fontWeight: FontWeight.bold)),
-            SizedBox(height: 20),
-            Text('LEVEL', style: TextStyle(color: Colors.grey[400], fontSize: 15)),
-            Text('$level', style: TextStyle(color: Colors.amberAccent, fontSize: 20, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          setState((){
-            level ++;
-          });
-        },
-        backgroundColor: Colors.blueGrey[700],
-        child: Icon(Icons.add, color: Colors.white),
+      body: Column(
+        children: quote.map((quote) => Text(quote)).toList(),
       ),
     );
   }
 }
-
-
-
