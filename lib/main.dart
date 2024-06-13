@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
+import 'quote.dart';
 
 void main() {
   runApp(MaterialApp(
-    home: Quote(),
+    home: QuoteList(),
   ));
 }
 
-class Quote extends StatefulWidget {
+class QuoteList extends StatefulWidget {
   @override
-  State<Quote> createState() => _QuoteState();
+  State<QuoteList> createState() => _QuoteListState();
 }
 
-class _QuoteState extends State<Quote> {
-  List<String> quote = [
-    'My name is Ngoc',
-    'I was born in Viet Nam',
-    'I speak Vietnamese'
+class _QuoteListState extends State<QuoteList> {
+  List<Quote> quotes = [
+    Quote('quote 1', 'Tom'),
+    Quote('quote 2', 'Tim'),
+    Quote('quote 3', 'Hela'),
   ];
   @override
   Widget build(BuildContext context) {
@@ -26,7 +27,7 @@ class _QuoteState extends State<Quote> {
         backgroundColor: Colors.blueGrey[800],
       ),
       body: Column(
-        children: quote.map((quote) => Text(quote)).toList(),
+        children: quotes.map((quote) => Text('${quote.text} - ${quote.author}')).toList(),
       ),
     );
   }
