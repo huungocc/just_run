@@ -12,52 +12,20 @@ class Home extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'FIRST APP',
+          'HUU NGOC',
           style: TextStyle(
             fontFamily: 'Caveat Variable',
             color: Colors.white,
           ),
         ),
-        centerTitle: true,
+        //centerTitle: true,
         backgroundColor: Colors.red[400],
       ),
-      body: Center(
-        child:
-          ////TextButton(
-          // ElevatedButton(
-          //   onPressed: () {
-          //     print('clicked');
-          //   },
-          //   style: ElevatedButton.styleFrom(
-          //     backgroundColor: Colors.red[400],
-          //   ),
-          //   child: Text(
-          //     'Please Click!',
-          //     style: TextStyle(
-          //       fontFamily: 'Caveat Variable',
-          //       fontSize: 20,
-          //       color: Colors.black,
-          //     ),
-          //   ),
-          // ),
-
-          // ElevatedButton.icon(
-          //   onPressed: () {},
-          //   icon: Icon(Icons.cabin),
-          //   label: Text('cabin', style: TextStyle(color: Colors.white)),
-          //   style: ElevatedButton.styleFrom(
-          //     backgroundColor: Colors.red[400],
-          //     iconColor: Colors.white
-          //   ),
-          // ),
-
-        IconButton(
-          onPressed: () {
-            print('Cabin');
-          },
-          icon: Icon(Icons.cabin),
-          color: Colors.red[400],
-        )
+      body: Container(
+        color: Colors.grey[400],
+        child: Text('hello'),
+        margin: EdgeInsets.fromLTRB(20, 30, 40, 30),
+        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.yellow,
