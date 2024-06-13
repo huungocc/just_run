@@ -14,18 +14,33 @@ class Home extends StatelessWidget {
         title: Text(
           'HUU NGOC',
           style: TextStyle(
-            fontFamily: 'Caveat Variable',
             color: Colors.white,
           ),
         ),
         //centerTitle: true,
         backgroundColor: Colors.red[400],
       ),
-      body: Container(
-        color: Colors.grey[400],
-        child: Text('hello'),
-        margin: EdgeInsets.fromLTRB(20, 30, 40, 30),
-        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+      body: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            width: 150,
+            height: 150,
+            child: Image.asset('assets/map-1.jpg', fit: BoxFit.cover),
+          ),
+          Container(
+            child: Text('This is a World Map', style: TextStyle(color: Colors.red[400], fontFamily: 'Caveat Variable')),
+          ),
+          Container(
+            child:
+              IconButton(
+                onPressed: () {},
+                icon: Icon(Icons.map),
+                color: Colors.red[400],
+              )
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.yellow,
