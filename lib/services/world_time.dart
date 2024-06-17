@@ -7,6 +7,7 @@ class WorldTime {
   String? time; // Thời gian tại địa điểm đó
   String flag; // URL đến biểu tượng cờ
   String url; // Địa chỉ cho endpoint
+  bool isDayTime = true;
 
   WorldTime({required this.location, required this.flag, required this.url});
 
@@ -26,6 +27,7 @@ class WorldTime {
       now = now.add(Duration(hours: int.parse(offset)));
 
       // Gán giá trị cho time
+      isDayTime = now.hour>6 && now.hour<18 ? true : false;
       time = DateFormat.jm().format(now);
     }
     catch(e){
