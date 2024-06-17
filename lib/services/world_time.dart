@@ -1,0 +1,33 @@
+import 'package:http/http.dart';
+import 'dart:convert';
+
+class WorldTime {
+  String location; // Tên địa điểm cho giao diện người dùng
+  String? time; // Thời gian tại địa điểm đó
+  String flag; // URL đến biểu tượng cờ
+  String url; // Địa chỉ URL cho API endpoint
+
+  WorldTime({required this.location, required this.flag, required this.url});
+
+  Future<void> getTime() async {
+    try {
+      // Gửi yêu cầu đến API
+      Response response = await get(Uri.parse('http://worldtimeapi.org/api/timezone/$url'));
+      Map data = jsonDecode(response.body);
+
+      // Lấy các thuộc tính từ dữ liệu
+      String datetime = data['datetime'];
+      String offset = data['utc_offset'].substring(1, 3);
+
+      // Tạo đối tượng DateTime
+      DateTime now = DateTime.parse(datetime);
+      now = now.add(Duration(hours: int.parse(offset)));
+
+      // Gán giá trị cho thuộc tính time
+      time = now.toString();
+    } catch (e) {
+      print('Lỗi bắt được: $e');
+      time = 'Không thể lấy dữ liệu thời gian';
+    }
+  }
+}
