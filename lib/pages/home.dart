@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'choose_location.dart';
+
 class Home extends StatefulWidget {
   @override
   State<Home> createState() => _HomeState();
@@ -12,8 +14,8 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     data = ModalRoute.of(context)?.settings.arguments as Map? ?? {};
     print(data);
-
     String bgImage = data['isDayTime'] ? 'day.png' : 'night.png';
+    Color? bgColor = data['isDayTime'] ? Colors.blue[200] : Colors.deepOrangeAccent;
 
     return Scaffold(
       body:
@@ -45,14 +47,16 @@ class _HomeState extends State<Home> {
                     ),
                     TextButton.icon(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/location');
+                        Navigator.push(context, MaterialPageRoute(
+                            builder: (context) => ChooseLocation(bgColor: bgColor),
+                          ),
+                        );
                       },
                       icon: Icon(Icons.edit_location, color: Colors.black),
                       label: Text('Location', style: TextStyle(color: Colors.black)),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.transparent, // Nền trong suốt
-                      ),
+                      style: TextButton.styleFrom(backgroundColor: Colors.transparent,),
                     ),
+
                     SizedBox(height: 200),
                   ],
                 ),
