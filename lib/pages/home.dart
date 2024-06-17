@@ -15,14 +15,34 @@ class _HomeState extends State<Home> {
     return Scaffold(
       body:
         SafeArea(
-          child: Column(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/location');
-                },
-                icon: Icon(Icons.edit_location),
-                label: Text('edit Location'),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/location');
+                    },
+                    icon: Icon(Icons.edit_location),
+                    label: Text('Location'),
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    data['location'],
+                    style: TextStyle(
+                      fontSize: 35,
+                    ),
+                  ),
+                  Text(
+                    data['time'],
+                    style: TextStyle(
+                    fontSize: 65,
+                  ),
+                  ),
+                  SizedBox(height: 200),
+                ],
               ),
             ],
           )
