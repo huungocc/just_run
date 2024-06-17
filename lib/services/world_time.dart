@@ -5,11 +5,10 @@ import 'package:intl/intl.dart';
 class WorldTime {
   String location; // Tên địa điểm
   String? time; // Thời gian tại địa điểm đó
-  String flag; // URL đến biểu tượng cờ
   String url; // Địa chỉ cho endpoint
   bool isDayTime = true;
 
-  WorldTime({required this.location, required this.flag, required this.url});
+  WorldTime({required this.location, required this.url});
 
   Future<void> getTime() async {
     try {
@@ -28,7 +27,7 @@ class WorldTime {
 
       // Gán giá trị cho time
       isDayTime = now.hour>6 && now.hour<18 ? true : false;
-      time = DateFormat.jm().format(now);
+      time = DateFormat('HH:mm:ss').format(now);
     }
     catch(e){
       print('Caught error: $e');

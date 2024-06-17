@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'choose_location.dart';
 
 class Home extends StatefulWidget {
@@ -12,8 +11,10 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    data = ModalRoute.of(context)?.settings.arguments as Map? ?? {};
-    print(data);
+    //lay data thanh map
+    data = data.isNotEmpty ? data : ModalRoute.of(context)?.settings.arguments as Map? ?? {};
+    //print(data);
+
     String bgImage = data['isDayTime'] ? 'day.png' : 'night.png';
     Color? bgColor = data['isDayTime'] ? Colors.blue[200] : Colors.deepOrangeAccent;
 
@@ -35,26 +36,31 @@ class _HomeState extends State<Home> {
                   children: [
                     Text(
                       data['location'],
-                      style: TextStyle(
-                        fontSize: 35,
-                      ),
+                      style: TextStyle(fontFamily: 'Anton', fontSize: 35, color: Colors.blueGrey[900]),
                     ),
                     Text(
                       data['time'],
-                      style: TextStyle(
-                      fontSize: 65,
-                    ),
+                      style: TextStyle(fontFamily: 'Anton', fontSize: 75, color: Colors.blueGrey[900]),
                     ),
                     TextButton.icon(
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(
+                      onPressed: () async {
+                        dynamic result = await Navigator.push(context, MaterialPageRoute(
                             builder: (context) => ChooseLocation(bgColor: bgColor),
                           ),
                         );
+                        if(result != null){
+                          setState(() {
+                            data = {
+                              'location': result['location'],
+                              'time': result['time'],
+                              'isDayTime': result['isDayTime']
+                            };
+                          });
+                        }
                       },
-                      icon: Icon(Icons.edit_location, color: Colors.black),
-                      label: Text('Location', style: TextStyle(color: Colors.black)),
-                      style: TextButton.styleFrom(backgroundColor: Colors.transparent,),
+                      icon: Icon(Icons.edit_location, color: Colors.redAccent),
+                      label: Text('Location', style: TextStyle(fontFamily: 'Anton', color: Colors.redAccent)),
+                      style: TextButton.styleFrom(backgroundColor: Colors.transparent),
                     ),
 
                     SizedBox(height: 200),
