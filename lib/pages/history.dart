@@ -18,6 +18,17 @@ class _HistoryState extends State<History> {
           centerTitle: true,
         ),
       ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+              image: AssetImage('assets/background_black.jpg'),
+              fit: BoxFit.cover
+          ),
+        ),
+        //child: ,
+      ),
     );;
   }
 }
