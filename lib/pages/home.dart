@@ -24,9 +24,7 @@ class _HomeState extends State<Home> {
                   padding: EdgeInsets.symmetric(vertical: 20.0),
                   backgroundColor: Colors.grey[850],
                   elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
                 ),
                 child: Text('Free', style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
               ),
@@ -36,13 +34,21 @@ class _HomeState extends State<Home> {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
-                      String limit = ''; // Biến để lưu dữ liệu nhập vào
+                      String limit = '';
+                      FocusNode focusNode = FocusNode();
+
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        FocusScope.of(context).requestFocus(focusNode);
+                      });
+
                       return AlertDialog(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                         title: Text('Enter your limit (km)', style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
                         content: TextField(
+                          focusNode: focusNode,
+                          keyboardType: TextInputType.number,
                           onChanged: (value) {
                             limit = value;
                           },
@@ -58,6 +64,7 @@ class _HomeState extends State<Home> {
                           ),
                           TextButton(
                             onPressed: () {
+                              Navigator.pop(context);
                               Navigator.pushNamed(context, '/running');
                             },
                             child: Text('OK', style: TextStyle(fontSize: 18.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
@@ -75,7 +82,7 @@ class _HomeState extends State<Home> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                child: Text('Limit', style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+                child: Text('Limit', style: TextStyle(fontSize: 20.0, color: Colors.black, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -83,6 +90,7 @@ class _HomeState extends State<Home> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -134,18 +142,10 @@ class _HomeState extends State<Home> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               child: Column(
                 children: [
-                  _buildSizedCardIcon('Network', Icons.wifi, _changeNetworkStatus as VoidCallback),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-              child: Column(
-                children: [
-                  _buildSizedCardIcon('History', Icons.play_arrow, _navigateToHistory as VoidCallback),
+                  _buildNetworkCard('Network', Icons.wifi),
                 ],
               ),
             ),
@@ -153,9 +153,17 @@ class _HomeState extends State<Home> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 children: [
-                  _buildSizedCardText('Age', '20', _changeInformation as VoidCallback),
-                  _buildSizedCardText('Height (cm)', '160', _changeInformation as VoidCallback),
-                  _buildSizedCardText('Weight (kg)', '57', _changeInformation as VoidCallback),
+                  _buildInformationCard('Age', '20', _changeInformation),
+                  _buildInformationCard('Height (cm)', '160', _changeInformation),
+                  _buildInformationCard('Weight (kg)', '57', _changeInformation),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  _buildHistoryCard('History', _navigateToHistory),
                 ],
               ),
             ),
@@ -165,7 +173,7 @@ class _HomeState extends State<Home> {
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
         child: Container(
-          height: 80.0, // Tăng chiều cao của thanh dock để chứa FAB
+          height: 80.0,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -174,7 +182,7 @@ class _HomeState extends State<Home> {
                   onPressed: () {
                     _showOptions(context);
                   },
-                  child: Icon(Icons.play_arrow, color: Colors.redAccent, size: 36.0),
+                  child: Icon(Icons.directions_run_rounded, color: Colors.redAccent, size: 30.0),
                   backgroundColor: Colors.grey[850],
                   shape: CircleBorder(),
                 ),
@@ -188,19 +196,18 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildSizedCardText(String title, String description, VoidCallback onTap) {
+  Widget _buildInformationCard(String title, String description, VoidCallback onTap) {
     return GestureDetector(
       onTap: () {
         onTap();
       },
       child: Container(
         width: double.infinity,
-        height: 80.0,
-        margin: EdgeInsets.symmetric(vertical: 8.0),
+        height: 50.0,
+        margin: EdgeInsets.symmetric(vertical: 2.0),
         child: Card(
-          elevation: 5.0,
           child: Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -221,7 +228,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildSizedCardIcon(String title, IconData iconData, VoidCallback onTap) {
+  Widget _buildHistoryCard(String title, VoidCallback onTap) {
     return GestureDetector(
       onTap: () {
         onTap();
@@ -231,6 +238,7 @@ class _HomeState extends State<Home> {
         height: 80.0,
         margin: EdgeInsets.symmetric(vertical: 8.0),
         child: Card(
+          color: Colors.redAccent,
           elevation: 5.0,
           child: Padding(
             padding: EdgeInsets.all(16.0),
@@ -242,7 +250,35 @@ class _HomeState extends State<Home> {
                   title,
                   style: TextStyle(fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
                 ),
-                Icon(iconData)
+                Icon(Icons.play_arrow)
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNetworkCard(String title, IconData iconData) {
+    return GestureDetector(
+      child: Container(
+        width: double.infinity,
+        height: 50.0,
+        margin: EdgeInsets.symmetric(vertical: 8.0),
+        child: Card(
+          color: Colors.grey[850],
+          elevation: 5.0,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                ),
+                Icon(iconData, color: Colors.white)
               ],
             ),
           ),
@@ -253,10 +289,6 @@ class _HomeState extends State<Home> {
 
   void _navigateToHistory() {
     Navigator.pushNamed(context, '/history');
-  }
-
-  void _changeNetworkStatus() {
-    //xử lí
   }
 
   void _changeInformation() {
