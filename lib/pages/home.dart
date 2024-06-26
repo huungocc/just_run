@@ -153,9 +153,9 @@ class _HomeState extends State<Home> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 children: [
-                  _buildInformationCard('Age', '20', _changeInformation as VoidCallback),
-                  _buildInformationCard('Height (cm)', '160', _changeInformation as VoidCallback),
-                  _buildInformationCard('Weight (kg)', '57', _changeInformation as VoidCallback),
+                  _buildInformationCard('Age', '20', _changeInformation),
+                  _buildInformationCard('Height (cm)', '160', _changeInformation),
+                  _buildInformationCard('Weight (kg)', '57', _changeInformation),
                 ],
               ),
             ),
@@ -163,7 +163,7 @@ class _HomeState extends State<Home> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 children: [
-                  _buildHistoryCard('History', Icons.play_arrow, _navigateToHistory as VoidCallback),
+                  _buildHistoryCard('History', _navigateToHistory),
                 ],
               ),
             ),
@@ -206,7 +206,6 @@ class _HomeState extends State<Home> {
         height: 50.0,
         margin: EdgeInsets.symmetric(vertical: 2.0),
         child: Card(
-          elevation: 5.0,
           child: Padding(
             padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
             child: Row(
@@ -229,7 +228,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildHistoryCard(String title, IconData iconData, VoidCallback onTap) {
+  Widget _buildHistoryCard(String title, VoidCallback onTap) {
     return GestureDetector(
       onTap: () {
         onTap();
@@ -251,7 +250,7 @@ class _HomeState extends State<Home> {
                   title,
                   style: TextStyle(fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
                 ),
-                Icon(iconData)
+                Icon(Icons.play_arrow)
               ],
             ),
           ),

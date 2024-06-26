@@ -91,7 +91,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     });
   }
 
-  Future<bool> _onBackPressed() {
+  Future <bool> _onBackPressed() {
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -111,6 +111,33 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
               Navigator.pop(context, true);
             },
             child: Text('Exit', style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    ).then((value) => value ?? false);
+  }
+
+  Future <void> _onStopPressed() {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        title: Text('Stop running?', style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Cancel', style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, '/running');
+              Navigator.pushReplacementNamed(context, '/result');
+            },
+            child: Text('Stop', style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -181,8 +208,9 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                   ),
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 12),
-                    width: 350,
+                    width: double.infinity,
                     height: 20,
+                    padding: EdgeInsets.fromLTRB(4, 0, 4, 0),
                     child: ClipRRect(
                       borderRadius: BorderRadius.all(Radius.circular(7)),
                       child: LinearProgressIndicator(
@@ -199,7 +227,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                       IconButton(
                         icon: Icon(Icons.stop_circle_outlined, size: 34.0),
                         onPressed: () {
-                          //
+                          _onStopPressed();
                         },
                       ),
                       Container(
