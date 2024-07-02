@@ -3,6 +3,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
+import 'package:just_run/routes.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 class Running extends StatefulWidget {
   @override
   State<Running> createState() => _RunningState();
@@ -98,19 +101,19 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),
-        title: Text('Exit without saving?', style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.exitTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
         actions: <Widget>[
           TextButton(
             onPressed: () {
               Navigator.pop(context, false);
             },
-            child: Text('Cancel', style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context, true);
             },
-            child: Text('Exit', style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.exitButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -124,20 +127,20 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),
-        title: Text('Stop running?', style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.stopTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
         actions: <Widget>[
           TextButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text('Cancel', style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context, '/running');
-              Navigator.pushReplacementNamed(context, '/result');
+              Navigator.pop(context, Routes.running);
+              Navigator.pushReplacementNamed(context, Routes.result);
             },
-            child: Text('Stop', style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.stopButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -155,7 +158,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
           child: AppBar(
             backgroundColor: Colors.white,
             title: Text(
-              'Running',
+              AppLocalizations.of(context)!.runningCardTitle,
               style: TextStyle(
                 color: Colors.black,
                 fontFamily: 'Blinker',
@@ -192,18 +195,18 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: _buildInformationCard('4.12', 'Distance (km)')),
+                      Expanded(child: _buildInformationCard('4.12', AppLocalizations.of(context)!.distanceTitle)),
                       SizedBox(width: 16),
-                      Expanded(child: _buildInformationCard('00:20:00', 'Total time')),
+                      Expanded(child: _buildInformationCard('00:20:00', AppLocalizations.of(context)!.totalTimeTitle)),
                     ],
                   ),
                   SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: _buildInformationCard('15', 'Speed (km/h)')),
+                      Expanded(child: _buildInformationCard('15', AppLocalizations.of(context)!.speedTitle)),
                       SizedBox(width: 16),
-                      Expanded(child: _buildInformationCard('200', 'Step')),
+                      Expanded(child: _buildInformationCard('200', AppLocalizations.of(context)!.stepsTitle)),
                     ],
                   ),
                   Container(

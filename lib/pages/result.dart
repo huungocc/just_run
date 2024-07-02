@@ -6,6 +6,9 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
 
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+
 class Result extends StatefulWidget {
   @override
   State<Result> createState() => _ResultState();
@@ -24,7 +27,7 @@ class _ResultState extends State<Result> {
           child: AppBar(
             backgroundColor: Colors.white,
             title: Text(
-              'Result',
+              AppLocalizations.of(context)!.resultCardTitle,
               style: TextStyle(color: Colors.black, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
             ),
             actions: [
@@ -57,11 +60,11 @@ class _ResultState extends State<Result> {
                 ),
                 Column(
                   children: [
-                    _buildInformationCard('Date', '20/06/2024'),
-                    _buildInformationCard('Distance (km)', '4.12'),
-                    _buildInformationCard('Total time', '00:20:00'),
-                    _buildInformationCard('Steps', '200'),
-                    _buildInformationCard('Calories (kcal)', '100'),
+                    _buildInformationCard(AppLocalizations.of(context)!.dateTitle, '20/06/2024'),
+                    _buildInformationCard(AppLocalizations.of(context)!.distanceTitle, '4.12'),
+                    _buildInformationCard(AppLocalizations.of(context)!.totalTimeTitle, '00:20:00'),
+                    _buildInformationCard(AppLocalizations.of(context)!.stepsTitle, '200'),
+                    _buildInformationCard(AppLocalizations.of(context)!.caloriesTitle, '100'),
                   ],
                 ),
               ],

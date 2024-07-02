@@ -1,0 +1,31 @@
+{
+  "resultCardTitle": "Result",
+  "runningCardTitle": "Running",
+  "networkCardTitle": "Network",
+  "historyCardTitle": "History",
+
+  "freeButton": "Free",
+  "limitButton": "Limit",
+  "cancelButton": "Cancel",
+  "okButton": "OK",
+  "stopButton": "Stop",
+  "exitButton": "Exit",
+
+  "ageTitle": "Age",
+  "heightTitle": "Height (cm)",
+  "weightTitle": "Weight (kg)",
+
+  "dateTitle": "Date",
+  "distanceTitle": "Distance (km)",
+  "totalTimeTitle": "Total time",
+  "stepsTitle": "Steps",
+  "caloriesTitle": "Calories",
+  "speedTitle": "Speed (km/h)",
+
+  "offlineModeTitle": "Offline Mode",
+  "changeInformationTitle": "Change Information",
+  "enterLimitTitle": "Enter your limit (km)",
+
+  "exitTitle": "Exit without saving?",
+  "stopTitle": "Stop running"
+}

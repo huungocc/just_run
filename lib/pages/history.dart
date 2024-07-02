@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:just_run/routes.dart';
+
 class History extends StatefulWidget {
   @override
   State<History> createState() => _HistoryState();
@@ -71,7 +73,7 @@ class _HistoryState extends State<History> {
   }
 
   void _onHistoryPressed(){
-    Navigator.pushNamed(context, '/result');
+    Navigator.pushNamed(context, Routes.result);
   }
 
 }

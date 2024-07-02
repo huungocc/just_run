@@ -1,4 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:just_run/routes.dart';
+import 'package:just_run/services/auth_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -6,6 +14,38 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  final AuthService _authService = AuthService();
+  User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUser();
+  }
+
+  void _loadCurrentUser() {
+    setState(() {
+      _currentUser = FirebaseAuth.instance.currentUser;
+    });
+  }
+
+  Future<void> _signOut() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Center(
+          child: SpinKitThreeBounce(
+            color: Colors.redAccent,
+            size: 50.0,
+          ),
+        );
+      },
+    );
+    await _authService.signOut(context);
+    Navigator.pushReplacementNamed(context, Routes.login);
+  }
+
   void _showOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -18,15 +58,20 @@ class _HomeState extends State<Home> {
             children: <Widget>[
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/running');
+                  Navigator.pushNamed(context, Routes.running);
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 20.0),
                   backgroundColor: Colors.grey[850],
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
                 ),
-                child: Text('Free', style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+                child: Text(
+                  AppLocalizations.of(context)!.freeButton,
+                  style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                ),
               ),
               SizedBox(height: 16.0),
               ElevatedButton(
@@ -45,29 +90,37 @@ class _HomeState extends State<Home> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10.0),
                         ),
-                        title: Text('Enter your limit (km)', style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+                        title: Text(
+                          AppLocalizations.of(context)!.enterLimitTitle,
+                          style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                        ),
                         content: TextField(
                           focusNode: focusNode,
                           keyboardType: TextInputType.number,
                           onChanged: (value) {
                             limit = value;
                           },
-                          decoration: InputDecoration(
-                          ),
+                          decoration: InputDecoration(),
                         ),
                         actions: <Widget>[
                           TextButton(
                             onPressed: () {
                               Navigator.pop(context);
                             },
-                            child: Text('Cancel', style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+                            child: Text(
+                              AppLocalizations.of(context)!.cancelButton,
+                              style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                            ),
                           ),
                           TextButton(
                             onPressed: () {
                               Navigator.pop(context);
-                              Navigator.pushNamed(context, '/running');
+                              Navigator.pushNamed(context, Routes.running);
                             },
-                            child: Text('OK', style: TextStyle(fontSize: 18.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+                            child: Text(
+                              AppLocalizations.of(context)!.okButton,
+                              style: TextStyle(fontSize: 18.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ],
                       );
@@ -82,7 +135,10 @@ class _HomeState extends State<Home> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                child: Text('Limit', style: TextStyle(fontSize: 20.0, color: Colors.black, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+                child: Text(
+                  AppLocalizations.of(context)!.limitButton,
+                  style: TextStyle(fontSize: 20.0, color: Colors.black, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -90,7 +146,6 @@ class _HomeState extends State<Home> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -105,26 +160,25 @@ class _HomeState extends State<Home> {
               SizedBox(width: 20),
               CircleAvatar(
                 backgroundImage: AssetImage('assets/default.png'),
+                foregroundImage: NetworkImage(_currentUser!.photoURL!),
                 radius: 18,
               ),
             ],
           ),
           title: Text(
-            'Hi, user_name',
-            style: TextStyle(color: Colors.black, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+            _currentUser?.displayName ?? AppLocalizations.of(context)!.offlineModeTitle,
+            style: TextStyle(fontSize: 18, color: Colors.black, fontFamily: 'Kanit', fontWeight: FontWeight.bold),
           ),
           actions: [
             Row(
               children: [
                 IconButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
+                  onPressed: _signOut,
                   icon: Icon(Icons.logout_outlined, color: Colors.black),
                 ),
-                SizedBox(width: 12)
+                SizedBox(width: 12),
               ],
-            )
+            ),
           ],
           centerTitle: true,
           elevation: 4,
@@ -135,8 +189,8 @@ class _HomeState extends State<Home> {
         height: double.infinity,
         decoration: BoxDecoration(
           image: DecorationImage(
-              image: AssetImage('assets/background_black.jpg'),
-              fit: BoxFit.cover
+            image: AssetImage('assets/background_black.jpg'),
+            fit: BoxFit.cover,
           ),
         ),
         child: Column(
@@ -145,7 +199,7 @@ class _HomeState extends State<Home> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
               child: Column(
                 children: [
-                  _buildNetworkCard('Network', Icons.wifi),
+                  _buildNetworkCard(AppLocalizations.of(context)!.networkCardTitle, Icons.wifi),
                 ],
               ),
             ),
@@ -153,9 +207,9 @@ class _HomeState extends State<Home> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 children: [
-                  _buildInformationCard('Age', '20', _changeInformation),
-                  _buildInformationCard('Height (cm)', '160', _changeInformation),
-                  _buildInformationCard('Weight (kg)', '57', _changeInformation),
+                  _buildInformationCard(AppLocalizations.of(context)!.ageTitle, '20', _changeInformation),
+                  _buildInformationCard(AppLocalizations.of(context)!.heightTitle, '160', _changeInformation),
+                  _buildInformationCard(AppLocalizations.of(context)!.weightTitle, '57', _changeInformation),
                 ],
               ),
             ),
@@ -163,7 +217,7 @@ class _HomeState extends State<Home> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 children: [
-                  _buildHistoryCard('History', _navigateToHistory),
+                  _buildHistoryCard(AppLocalizations.of(context)!.historyCardTitle, _navigateToHistory),
                 ],
               ),
             ),
@@ -214,7 +268,7 @@ class _HomeState extends State<Home> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold,),
                 ),
                 Text(
                   description,
@@ -248,9 +302,9 @@ class _HomeState extends State<Home> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold,),
                 ),
-                Icon(Icons.play_arrow)
+                Icon(Icons.play_arrow),
               ],
             ),
           ),
@@ -276,9 +330,9 @@ class _HomeState extends State<Home> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: 'Blinker', fontWeight: FontWeight.bold,),
                 ),
-                Icon(iconData, color: Colors.white)
+                Icon(iconData, color: Colors.white),
               ],
             ),
           ),
@@ -288,7 +342,7 @@ class _HomeState extends State<Home> {
   }
 
   void _navigateToHistory() {
-    Navigator.pushNamed(context, '/history');
+    Navigator.pushNamed(context, Routes.history);
   }
 
   void _changeInformation() {
@@ -300,26 +354,34 @@ class _HomeState extends State<Home> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0),
           ),
-          title: Text('Change Information', style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+          title: Text(
+            AppLocalizations.of(context)!.changeInformationTitle,
+            style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold,),
+          ),
           content: TextField(
             onChanged: (value) {
               infor = value;
             },
-            decoration: InputDecoration(
-            ),
+            decoration: InputDecoration(),
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Cancel', style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+              child: Text(
+                AppLocalizations.of(context)!.cancelButton,
+                style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold,),
+              ),
             ),
             TextButton(
               onPressed: () {
-                //
+                // Perform update information logic here
               },
-              child: Text('OK', style: TextStyle(fontSize: 18.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+              child: Text(
+                AppLocalizations.of(context)!.okButton,
+                style: TextStyle(fontSize: 18.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         );
@@ -327,4 +389,3 @@ class _HomeState extends State<Home> {
     );
   }
 }
-
