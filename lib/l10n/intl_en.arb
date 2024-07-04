@@ -27,5 +27,7 @@
   "enterLimitTitle": "Enter your limit (km)",
 
   "exitTitle": "Exit without saving?",
-  "stopTitle": "Stop running"
+  "stopTitle": "Stop running",
+
+  "internetStatus": "No connection!"
 }

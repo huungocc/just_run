@@ -15,6 +15,8 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
   late AnimationController controller;
   bool isStarting = false;
 
+  bool isLockOn = false;
+
   Location location = Location();
   LatLng? currentLocation;
   late GoogleMapController mapController;
@@ -31,7 +33,6 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     )..addListener(() {
       setState(() {});
     });
-
     _getCurrentLocation();
   }
 
@@ -152,15 +153,16 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     return WillPopScope(
       onWillPop: _onBackPressed,
       child: Scaffold(
+        backgroundColor: isLockOn ? Colors.black : Colors.white,
         resizeToAvoidBottomInset: false,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(70.0),
           child: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: isLockOn ? Colors.black : Colors.white,
             title: Text(
               AppLocalizations.of(context)!.runningCardTitle,
               style: TextStyle(
-                color: Colors.black,
+                color: isLockOn ? Colors.white : Colors.black,
                 fontFamily: 'Blinker',
                 fontWeight: FontWeight.bold,
               ),
@@ -174,17 +176,25 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
           children: [
             Container(
               height: 300,
-              child: GoogleMap(
-                myLocationEnabled: true,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
-                initialCameraPosition: CameraPosition(target: currentLocation!, zoom: 15),
-                onMapCreated: (GoogleMapController controller) {
-                  mapController = controller;
-                  mapController.animateCamera(CameraUpdate.newCameraPosition(
-                    CameraPosition(target: currentLocation!, zoom: 15),
-                  ));
-                },
+              child: Visibility(
+                visible: !isLockOn,
+                maintainState: true,
+                child: GoogleMap(
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  initialCameraPosition: currentLocation != null
+                      ? CameraPosition(target: currentLocation!, zoom: 15)
+                      : CameraPosition(target: defaultCenter, zoom: 15),
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                    if (currentLocation != null) {
+                      mapController.animateCamera(CameraUpdate.newCameraPosition(
+                        CameraPosition(target: currentLocation!, zoom: 15),
+                      ));
+                    }
+                  },
+                ),
               ),
             ),
             Padding(
@@ -214,12 +224,16 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                     width: double.infinity,
                     height: 20,
                     padding: EdgeInsets.fromLTRB(4, 0, 4, 0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.all(Radius.circular(7)),
-                      child: LinearProgressIndicator(
-                        value: controller.value,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
-                        backgroundColor: Colors.grey[300],
+                    child: Visibility(
+                      visible: !isLockOn,
+                      maintainState: true,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.all(Radius.circular(7)),
+                        child: LinearProgressIndicator(
+                          value: controller.value,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
+                          backgroundColor: Colors.grey[300],
+                        ),
                       ),
                     ),
                   ),
@@ -228,33 +242,42 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.stop_circle_outlined, size: 34.0),
+                        icon: Icon(Icons.stop_circle_outlined, size: 34.0, color: Colors.black),
                         onPressed: () {
-                          _onStopPressed();
+                          isLockOn ? null : _onStopPressed();
                         },
                       ),
                       Container(
                         height: 80.0,
                         width: 80,
                         decoration: BoxDecoration(
-                          color: Colors.redAccent,
+                          color: isLockOn ? Colors.black : Colors.redAccent,
                           shape: BoxShape.circle,
                         ),
-                        child: IconButton(
-                          icon: Icon(
-                            isStarting ? Icons.pause : Icons.play_arrow,
-                            size: 50.0,
-                            color: Colors.white,
+                        child: Visibility(
+                          visible: !isLockOn,
+                          maintainState: true,
+                          child: IconButton(
+                            icon: Icon(
+                              isStarting ? Icons.pause : Icons.play_arrow,
+                              size: 50.0,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              _toggleAnimation();
+                            },
                           ),
-                          onPressed: () {
-                            _toggleAnimation();
-                          },
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.lock_outline_rounded, size: 30.0),
+                        icon: Icon(
+                          isLockOn ? Icons.lock_outline_rounded : Icons.lock_open_rounded, size: 30.0,
+                          color: isLockOn ? Colors.white : Colors.black
+                        ),
                         onPressed: () {
-                          //
+                          setState(() {
+                            isLockOn = !isLockOn;
+                          });
                         },
                       ),
                     ],
@@ -274,7 +297,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
         height: 100.0,
         margin: EdgeInsets.symmetric(vertical: 4.0),
         child: Card(
-          color: Colors.grey[300],
+          color: isLockOn ? Colors.black : Colors.grey[300],
           child: Padding(
             padding: EdgeInsets.all(15.0),
             child: Column(
@@ -283,11 +306,17 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 30.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 30.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold,
+                    color: isLockOn ? Colors.white : Colors.black87
+                  ),
                 ),
                 Text(
                   description,
-                  style: TextStyle(fontFamily: 'Blinker', fontSize: 12, fontWeight: FontWeight.bold,),
+                  style: TextStyle(
+                    fontFamily: 'Blinker', fontSize: 12, fontWeight: FontWeight.bold,
+                    color: isLockOn ? Colors.white : Colors.black87
+                  ),
                 ),
               ],
             ),
