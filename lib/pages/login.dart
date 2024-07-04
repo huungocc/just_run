@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sign_button/sign_button.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:just_run/routes.dart';
@@ -14,16 +15,23 @@ class _LoginState extends State<Login> {
   final AuthService _authService = AuthService();
 
   Future<void> _signInWithGoogle() async {
-    try {
-      User? user = await _authService.signInWithGoogle(context);
-      if (user != null) {
-        Navigator.pushReplacementNamed(context, Routes.home);
-      }
-    } catch (e) {
-      print(e);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to sign in with Google: $e')),
-      );
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Center(
+          child: SpinKitThreeBounce(
+            color: Colors.white,
+            size: 30.0,
+          ),
+        );
+      },
+    );
+
+    User? user = await _authService.signInWithGoogle(context);
+    Navigator.pop(context);
+    if (user != null) {
+      Navigator.pushReplacementNamed(context, Routes.home);
     }
   }
 

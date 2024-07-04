@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-
 class Result extends StatefulWidget {
   @override
   State<Result> createState() => _ResultState();

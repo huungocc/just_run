@@ -27,5 +27,15 @@
   "enterLimitTitle": "Enter your limit (km)",
 
   "exitTitle": "Exit without saving?",
-  "stopTitle": "Stop running"
+  "stopTitle": "Stop running",
+
+  "internetStatus": "No connection!",
+
+  "stopStatus": "Please Pause before Stop!",
+
+  "signinFailed": "Failed to sign in",
+  "signoutFailed": "Failed to sign out",
+  "userDataFailed": "No user data found for",
+  "loadDataFailed": "Failed to load data",
+  "saveDataFailed": "Failed to save data"
 }
