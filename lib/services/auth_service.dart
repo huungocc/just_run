@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -26,7 +27,7 @@ class AuthService {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to sign in: $e'),
+          content: Text(AppLocalizations.of(context)!.signinFailed + ': $e'),
         ),
       );
       throw e;
@@ -41,7 +42,7 @@ class AuthService {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to sign out: $e'),
+          content: Text(AppLocalizations.of(context)!.signoutFailed + ': $e'),
         ),
       );
       throw e;

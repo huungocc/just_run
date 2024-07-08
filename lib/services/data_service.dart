@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class DataService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -15,7 +16,7 @@ class DataService {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to save data: $e'),
+          content: Text(AppLocalizations.of(context)!.saveDataFailed + ': $e'),
         ),
       );
     }
@@ -27,14 +28,14 @@ class DataService {
       if (doc.exists) {
         return doc.data();
       } else {
-        print('No user data found for $userId');
+        print(AppLocalizations.of(context)!.userDataFailed + ' $userId');
         return null;
       }
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to load data: $e'),
+          content: Text(AppLocalizations.of(context)!.loadDataFailed + ': $e'),
         ),
       );
       return null;
