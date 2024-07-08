@@ -8,8 +8,10 @@ import 'package:just_run/routes.dart';
 import 'package:just_run/services/auth_service.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:just_run/services/data_service.dart';
+import 'package:just_run/services/user_arguments.dart';
 
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+import 'package:permission_handler/permission_handler.dart' as permission_pack;
 
 class Home extends StatefulWidget {
   @override
@@ -29,6 +31,7 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    _requestPermission();
     _internetCheck();
     _loadCurrentUser();
   }
@@ -37,6 +40,33 @@ class _HomeState extends State<Home> {
   void dispose() {
     _internetConnection?.cancel();
     super.dispose();
+  }
+
+  Future<void> _requestPermission() async {
+    final activityRecognitionStatus = await permission_pack.Permission.activityRecognition.status;
+    final locationStatus = await permission_pack.Permission.location.status;
+    //Activity Recognition Permission
+    if (!activityRecognitionStatus.isGranted) {
+      final activityRecognitionRequest = await permission_pack.Permission.activityRecognition.request();
+      if (activityRecognitionRequest.isDenied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Activity Recognition Denied'),
+          ),
+        );
+      }
+    }
+    //Location Permission
+    if (!locationStatus.isGranted) {
+      final locationRequest = await permission_pack.Permission.location.request();
+      if (locationRequest.isDenied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Location Denied'),
+          ),
+        );
+      }
+    }
   }
 
   void _loadCurrentUser() {
@@ -52,6 +82,7 @@ class _HomeState extends State<Home> {
         var userData = await _dataService.loadUserData(context, _currentUser!.uid);
         setState(() {
           _currentUserData = userData;
+          currentUserWeight = userData?['weight']?.toString() ?? 'no data';
         });
       }
     } catch (e) {
@@ -63,7 +94,6 @@ class _HomeState extends State<Home> {
       );
     }
   }
-
 
   Future<void> _signOut() async {
     showDialog(
@@ -83,7 +113,6 @@ class _HomeState extends State<Home> {
     Navigator.pop(context);
     Navigator.pushReplacementNamed(context, Routes.login);
   }
-
 
   void _internetCheck() {
     _internetConnection = InternetConnection().onStatusChange.listen((event) {
@@ -108,6 +137,7 @@ class _HomeState extends State<Home> {
   }
 
   void _showOptions(BuildContext context) {
+    String limit = '0';
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -119,7 +149,11 @@ class _HomeState extends State<Home> {
             children: <Widget>[
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, Routes.running);
+                  Navigator.pushNamed(
+                    context,
+                    Routes.running,
+                    arguments: RunningArguments(_currentUserData?['weight'] ?? 0, limit),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 20.0),
@@ -140,7 +174,6 @@ class _HomeState extends State<Home> {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
-                      String limit = '';
                       FocusNode focusNode = FocusNode();
 
                       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -176,7 +209,11 @@ class _HomeState extends State<Home> {
                           TextButton(
                             onPressed: () {
                               Navigator.pop(context);
-                              Navigator.pushNamed(context, Routes.running);
+                              Navigator.pushNamed(
+                                context,
+                                Routes.running,
+                                arguments: RunningArguments(_currentUserData?['weight'] ?? 0, limit),
+                              );
                             },
                             child: Text(
                               AppLocalizations.of(context)!.okButton,
@@ -209,23 +246,11 @@ class _HomeState extends State<Home> {
   }
 
   void _showInternetStatus(BuildContext context){
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        title: Text(AppLocalizations.of(context)!.internetStatus, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text(AppLocalizations.of(context)!.okButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
-          ),
-        ],
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.internetStatus),
       ),
-    ).then((value) => value ?? false);
+    );
   }
 
   @override

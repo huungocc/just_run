@@ -10,9 +10,11 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <application>
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAbw7VLR52x4BcytsT9BlNRh4SXRxJSHcw"/>
     </application>
+
 </manifest>
