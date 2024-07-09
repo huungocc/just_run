@@ -8,6 +8,7 @@ import 'package:just_run/routes.dart';
 import 'package:just_run/services/auth_service.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:just_run/services/data_service.dart';
+import 'package:just_run/services/user_arguments.dart';
 
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:permission_handler/permission_handler.dart' as permission_pack;
@@ -136,6 +137,7 @@ class _HomeState extends State<Home> {
   }
 
   void _showOptions(BuildContext context) {
+    String limit = '0';
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -147,7 +149,11 @@ class _HomeState extends State<Home> {
             children: <Widget>[
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, Routes.running, arguments: _currentUserData?['weight'] ?? 'no data');
+                  Navigator.pushNamed(
+                    context,
+                    Routes.running,
+                    arguments: RunningArguments(_currentUserData?['weight'] ?? 0, limit),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 20.0),
@@ -168,7 +174,6 @@ class _HomeState extends State<Home> {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
-                      String limit = '';
                       FocusNode focusNode = FocusNode();
 
                       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -204,7 +209,11 @@ class _HomeState extends State<Home> {
                           TextButton(
                             onPressed: () {
                               Navigator.pop(context);
-                              Navigator.pushNamed(context, Routes.running, arguments: _currentUserData?['weight'] ?? 'no data');
+                              Navigator.pushNamed(
+                                context,
+                                Routes.running,
+                                arguments: RunningArguments(_currentUserData?['weight'] ?? 0, limit),
+                              );
                             },
                             child: Text(
                               AppLocalizations.of(context)!.okButton,
