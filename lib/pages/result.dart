@@ -7,6 +7,8 @@ import 'dart:typed_data';
 import 'package:intl/intl.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:just_run/services/result_arguments.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class Result extends StatefulWidget {
   @override
@@ -15,6 +17,53 @@ class Result extends StatefulWidget {
 
 class _ResultState extends State<Result> {
   final ScreenshotController screenshotController = ScreenshotController();
+  late ResultArguments result;
+  late GoogleMapController mapController;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      setState(() {
+        result = ModalRoute.of(context)!.settings.arguments as ResultArguments;
+      });
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    DateTime time = DateTime(0).add(duration);
+    return DateFormat('HH:mm:ss').format(time);
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+    if (result?.polylines.isNotEmpty ?? false) {
+      final bounds = _getBounds(result!.polylines);
+      mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+    }
+  }
+
+  LatLngBounds _getBounds(Set<Polyline> polylines) {
+    double? x0, x1, y0, y1;
+    for (Polyline polyline in polylines) {
+      for (LatLng point in polyline.points) {
+        if (x0 == null) {
+          x0 = x1 = point.latitude;
+          y0 = y1 = point.longitude;
+        } else {
+          if (point.latitude > x1!) x1 = point.latitude;
+          if (point.latitude < x0) x0 = point.latitude;
+          if (point.longitude > y1!) y1 = point.longitude;
+          if (point.longitude < y0!) y0 = point.longitude;
+        }
+      }
+    }
+    return LatLngBounds(
+      southwest: LatLng(x0!, y0!),
+      northeast: LatLng(x1!, y1!),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Screenshot(
@@ -51,19 +100,39 @@ class _ResultState extends State<Result> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 16),
+                  padding: const EdgeInsets.fromLTRB(5, 0, 5, 8),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16.0),
-                    child: Image.asset('assets/map_1.jpg'),
+                    child: Container(
+                      height: 270,
+                      child: GoogleMap(
+                        myLocationEnabled: false,
+                        myLocationButtonEnabled: false,
+                        zoomControlsEnabled: false,
+                        onMapCreated: _onMapCreated,
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(21.0278, 105.8342),
+                          zoom: 15.0,
+                        ),
+                        polylines: Set<Polyline>.from(
+                          result?.polylines.map((polyline) => Polyline(
+                            polylineId: PolylineId('polyline_id'),
+                            points: polyline.points,
+                            color: Colors.redAccent,
+                            width: 3,
+                          )) ?? {},
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 Column(
                   children: [
-                    _buildInformationCard(AppLocalizations.of(context)!.dateTitle, '20/06/2024'),
-                    _buildInformationCard(AppLocalizations.of(context)!.distanceTitle, '4.12'),
-                    _buildInformationCard(AppLocalizations.of(context)!.totalTimeTitle, '00:20:00'),
-                    _buildInformationCard(AppLocalizations.of(context)!.stepsTitle, '200'),
-                    _buildInformationCard(AppLocalizations.of(context)!.caloriesTitle, '100'),
+                    _buildInformationCard(AppLocalizations.of(context)!.dateTitle, result.dateTime),
+                    _buildInformationCard(AppLocalizations.of(context)!.distanceTitle, result.totalDistance.toStringAsFixed(1)),
+                    _buildInformationCard(AppLocalizations.of(context)!.totalTimeTitle, _formatDuration(result.totalTime)),
+                    _buildInformationCard(AppLocalizations.of(context)!.stepsTitle, result.totalSteps.toString()),
+                    _buildInformationCard(AppLocalizations.of(context)!.caloriesTitle, result.totalCalories.toStringAsFixed(0)),
                   ],
                 ),
               ],

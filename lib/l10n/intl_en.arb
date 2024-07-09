@@ -32,6 +32,7 @@
   "internetStatus": "No connection!",
 
   "stopStatus": "Please Pause before Stop!",
+  "reachLimitTitle": "Goal Completed!",
 
   "signinFailed": "Failed to sign in",
   "signoutFailed": "Failed to sign out",
