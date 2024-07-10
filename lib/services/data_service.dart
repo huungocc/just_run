@@ -75,8 +75,24 @@ class DataService {
 
   Future<List<Map<String, dynamic>>?> loadRunningData(BuildContext context, String userId) async {
     try {
-      var querySnapshot = await _db.collection('users').doc(userId).collection('runs').get();
-      return querySnapshot.docs.map((doc) => doc.data()).toList();
+      var querySnapshot = await _db.collection('users').doc(userId).collection('runs').orderBy('dateTime', descending: true).get();
+
+      List<Map<String, dynamic>> runningData = querySnapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data()!;
+
+        List<dynamic> polylineList = data['polylines'];
+        Set<Polyline> polylines = polylineList.map((polylineData) {
+          return Polyline(
+            polylineId: PolylineId(polylineData['polylineId']),
+            points: (polylineData['points'] as List<dynamic>).map((point) => LatLng(point['latitude'], point['longitude'])).toList(),
+          );
+        }).toSet();
+        data['polylines'] = polylines;
+
+        return data;
+      }).toList();
+
+      return runningData;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -84,6 +100,33 @@ class DataService {
         ),
       );
       return null;
+    }
+  }
+
+  Future<void> deleteEachRunningData(BuildContext context, String userId, String dateTime) async {
+    try {
+      await _db.collection('users').doc(userId).collection('runs').doc(dateTime).delete();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.deleteDataFailed + ': $e'),
+        ),
+      );
+    }
+  }
+
+  Future<void> deleteAllRunningData(BuildContext context, String userId) async {
+    try {
+      var querySnapshot = await _db.collection('users').doc(userId).collection('runs').get();
+      for (var doc in querySnapshot.docs) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.deleteDataFailed + ': $e'),
+        ),
+      );
     }
   }
 }

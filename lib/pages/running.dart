@@ -17,6 +17,8 @@ import 'package:just_run/services/location_list.dart';
 import '../services/user_arguments.dart';
 import 'package:just_run/services/result_arguments.dart';
 
+import 'package:vibration/vibration.dart';
+
 class Running extends StatefulWidget {
   @override
   State<Running> createState() => _RunningState();
@@ -365,6 +367,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
   }
 
   Future<void> _onReachLimit() {
+    Vibration.vibrate(duration: 2000);
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(

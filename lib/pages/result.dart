@@ -69,7 +69,6 @@ class _ResultState extends State<Result> {
     return Screenshot(
       controller: screenshotController,
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(70.0),
           child: AppBar(
@@ -104,7 +103,7 @@ class _ResultState extends State<Result> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16.0),
                     child: Container(
-                      height: 270,
+                      height: 255,
                       child: GoogleMap(
                         myLocationEnabled: false,
                         myLocationButtonEnabled: false,
@@ -147,7 +146,7 @@ class _ResultState extends State<Result> {
     return GestureDetector(
       child: Container(
         width: double.infinity,
-        height: 75.0,
+        height: 74.0,
         margin: EdgeInsets.symmetric(vertical: 5.0),
         child: Card(
           color: Colors.grey[300],
