@@ -10,6 +10,7 @@
   "okButton": "OK",
   "stopButton": "Stop",
   "exitButton": "Exit",
+  "deleteButton": "Delete",
 
   "ageTitle": "Age",
   "heightTitle": "Height (cm)",
@@ -28,6 +29,9 @@
 
   "exitTitle": "Exit without saving?",
   "stopTitle": "Stop running",
+  "deleteEachTitle": "Delete this history?",
+  "deleteAllTitle": "Delete all history records?",
+  "noHistoryFound": "No history records found!",
 
   "internetStatus": "No connection!",
 
@@ -38,5 +42,6 @@
   "signoutFailed": "Failed to sign out",
   "userDataFailed": "No user data found for",
   "loadDataFailed": "Failed to load data",
-  "saveDataFailed": "Failed to save data"
+  "saveDataFailed": "Failed to save data",
+  "deleteDataFailed": "Failed to delete"
 }
