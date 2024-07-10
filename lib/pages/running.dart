@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:just_run/services/data_service.dart';
 import 'package:location/location.dart' as location_pack;
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -13,6 +15,7 @@ import 'package:pedometer/pedometer.dart';
 import 'package:just_run/services/location_list.dart';
 
 import '../services/user_arguments.dart';
+import 'package:just_run/services/result_arguments.dart';
 
 class Running extends StatefulWidget {
   @override
@@ -20,6 +23,8 @@ class Running extends StatefulWidget {
 }
 
 class _RunningState extends State<Running> with TickerProviderStateMixin {
+  User? _currentUser;
+
   late AnimationController controller;
 
   bool isStarting = false;
@@ -54,6 +59,8 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
+    _loadCurrentUser();
+
     WidgetsBinding.instance!.addPostFrameCallback((_) {
       final args = ModalRoute.of(context)!.settings.arguments;
       if (args is RunningArguments) {
@@ -67,6 +74,13 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     _timer = Timer(Duration.zero, () {});
 
     checkLocationServiceEnabled();
+
+  }
+
+  void _loadCurrentUser() {
+    setState(() {
+      _currentUser = FirebaseAuth.instance.currentUser;
+    });
   }
 
   Future<void> checkLocationServiceEnabled() async {
@@ -119,6 +133,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     if (isStarting) {
       stopTimer();
       stopCountingSteps();
+      _currentSpeed = 0;
     } else {
       startTimer();
       startCountingSteps();
@@ -330,7 +345,17 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
             onPressed: () {
               Navigator.pop(context, Routes.running);
               _calculateCalories();
-              Navigator.pushReplacementNamed(context, Routes.result);
+              Navigator.pushReplacementNamed(context, Routes.result, arguments: ResultArguments(dateTime: DateFormat('dd-MM-yyyy HH:mm').format(DateTime.now()), totalDistance: _totalDistance, totalTime: _totalTime, totalSteps: _currentSteps, totalCalories: _currentCalories, polylines: _polylines));
+              DataService().saveRunningData(
+                context,
+                _currentUser!.uid,
+                DateFormat('dd-MM-yyyy HH:mm').format(DateTime.now()),
+                _totalDistance,
+                _totalTime,
+                _currentSteps,
+                _currentCalories,
+                _polylines,
+              );
             },
             child: Text(AppLocalizations.of(context)!.stopButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
           ),
@@ -387,39 +412,30 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
             ? Center(child: SpinKitThreeBounce(color: Colors.black, size: 30.0))
             : Column(
           children: [
-            Container(
-              height: 300,
-              child: Visibility(
-                visible: !isLockOn,
-                maintainState: true,
-                child: Stack(
-                  children: [
-                    GoogleMap(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16.0),
+                child: Container(
+                  height: 300,
+                  child: Visibility(
+                    visible: !isLockOn,
+                    maintainState: true,
+                    child: GoogleMap(
                       myLocationEnabled: true,
-                      myLocationButtonEnabled: false,
+                      myLocationButtonEnabled: true,
                       zoomControlsEnabled: false,
                       initialCameraPosition: CameraPosition(target: currentLocation!, zoom: 15),
                       polylines: _polylines,
                       onMapCreated: (GoogleMapController controller) {
                         mapController = controller;
-                          mapController.animateCamera(CameraUpdate.newCameraPosition(
-                            CameraPosition(target: currentLocation!, zoom: 15),
-                          ));
+                        mapController.animateCamera(CameraUpdate.newCameraPosition(
+                          CameraPosition(target: currentLocation!, zoom: 15),
+                        ));
                         _controller.complete(controller);
                       },
                     ),
-                    Positioned(
-                      bottom: 16,
-                      right: 16,
-                      child: FloatingActionButton(
-                        backgroundColor: Colors.redAccent,
-                        shape: CircleBorder(),
-                        onPressed: _updateCameraPosition,
-                        tooltip: 'Focus on Current Location',
-                        child: Icon(Icons.my_location, color: Colors.white),
-                      ),
-                    ),
-                  ]
+                  ),
                 ),
               ),
             ),
