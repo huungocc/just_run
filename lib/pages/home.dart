@@ -149,6 +149,7 @@ class _HomeState extends State<Home> {
             children: <Widget>[
               ElevatedButton(
                 onPressed: () {
+                  Navigator.pop(context);
                   Navigator.pushNamed(
                     context,
                     Routes.running,
@@ -208,6 +209,7 @@ class _HomeState extends State<Home> {
                           ),
                           TextButton(
                             onPressed: () {
+                              Navigator.pop(context);
                               Navigator.pop(context);
                               Navigator.pushNamed(
                                 context,
@@ -296,19 +298,19 @@ class _HomeState extends State<Home> {
           elevation: 4,
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadUserData,
-        child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          child: Container(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/background_black.jpg'),
-                fit: BoxFit.cover,
-              ),
-            ),
+      body: Container(
+        width: double.infinity,
+        height: MediaQuery.of(context).size.height,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/background_black.jpg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: RefreshIndicator(
+          onRefresh: _loadUserData,
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
             child: Column(
               children: [
                 Padding(
@@ -332,7 +334,7 @@ class _HomeState extends State<Home> {
                       _buildInformationCard(AppLocalizations.of(context)!.weightTitle, () {
                         _changeInformation(currentUserWeight);
                       }),
-          
+
                     ],
                   ),
                 ),
