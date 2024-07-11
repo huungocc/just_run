@@ -190,6 +190,7 @@ class _HomeState extends State<Home> {
                           style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold),
                         ),
                         content: TextField(
+                          cursorColor: Colors.black,
                           focusNode: focusNode,
                           keyboardType: TextInputType.number,
                           onChanged: (value) {
@@ -308,6 +309,7 @@ class _HomeState extends State<Home> {
           ),
         ),
         child: RefreshIndicator(
+          color: Colors.black,
           onRefresh: _loadUserData,
           child: SingleChildScrollView(
             physics: AlwaysScrollableScrollPhysics(),

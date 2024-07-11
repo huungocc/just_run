@@ -8,6 +8,7 @@ import 'package:just_run/services/data_service.dart';
 import 'package:just_run/services/result_arguments.dart';
 
 import 'package:vibration/vibration.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 
 class History extends StatefulWidget {
   @override
@@ -17,8 +18,11 @@ class History extends StatefulWidget {
 class _HistoryState extends State<History> {
   User? _currentUser;
   List<String> historyDates = [];
+  List<String> historyByDates = [];
+  List<String> filteredDates = [];
+  String selectedDate = 'All';
   bool _isLoading = false;
-
+  final TextEditingController textEditingController = TextEditingController();
 
   @override
   void initState() {
@@ -43,6 +47,8 @@ class _HistoryState extends State<History> {
     if (runningData != null) {
       setState(() {
         historyDates = runningData.map<String>((data) => data['dateTime']).toList();
+        historyByDates = runningData.map<String>((data) => data['dateTime'].split(' ')[0]).toList();
+        filteredDates = historyDates;
         _isLoading = false;
       });
     }
@@ -86,35 +92,122 @@ class _HistoryState extends State<History> {
               fit: BoxFit.cover
           ),
         ),
-        child:  _isLoading
-            ? Center(child: SpinKitThreeBounce(color: Colors.white, size: 30.0))
-            : historyDates.isEmpty
-            ? Center(
-              child: Text(
-                AppLocalizations.of(context)!.noHistoryFound,
-                style: TextStyle(color: Colors.white, fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
+              child: Container(
+                padding: EdgeInsets.only(left: 12, right: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white, width: 2),
+                  borderRadius: BorderRadius.all(Radius.circular(10.0)),
+                ),
+                child: DropdownButton2<String>(
+                  style: TextStyle(color: Colors.white, fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  iconStyleData: IconStyleData(
+                    icon: Icon(Icons.filter_list_outlined, color: Colors.white, size: 25),
+                  ),
+                  dropdownStyleData: DropdownStyleData(
+                    maxHeight: 300,
+                    offset: Offset(0, -5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      color: Colors.black,
+                    ),
+                  ),
+                  dropdownSearchData: DropdownSearchData(
+                    searchController: textEditingController,
+                    searchInnerWidgetHeight: 50,
+                    searchInnerWidget: Container(
+                      height: 60,
+                      padding: EdgeInsets.fromLTRB(8, 8, 8, 4),
+                      child: TextFormField(
+                        expands: true,
+                        maxLines: null,
+                        controller: textEditingController,
+                        style: TextStyle(color: Colors.white, fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                        cursorColor: Colors.white,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          hintText: 'Search',
+                          hintStyle: TextStyle(color: Colors.grey, fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.white),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.white, width: 1.5),
+                          ),
+                        ),
+                      ),
+                    ),
+                    searchMatchFn: (item, searchValue) {
+                      return item.value.toString().contains(searchValue);
+                    },
+                  ),
+                  onMenuStateChange: (isOpen) {
+                    if (!isOpen) {
+                      textEditingController.clear();
+                    }
+                  },
+                  isExpanded: true,
+                  value: selectedDate,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedDate = newValue!;
+                      if (selectedDate == 'All') {
+                        filteredDates = historyDates;
+                      }
+                      else {
+                        filteredDates = historyDates.where((date) => date.startsWith(selectedDate)).toList();
+                      }
+                    });
+                  },
+                  items: ['All', ...historyByDates.toSet().toList()].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                ),
               ),
-            )
-            : Scrollbar(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                child: RefreshIndicator(
-                  onRefresh: _loadHistoryDates,
-                  child: SingleChildScrollView(
-                    physics: AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      children: _buildHistoryCards(),
+            ),
+            Expanded(
+              child: _isLoading
+                ? Center(child: SpinKitThreeBounce(color: Colors.white, size: 30.0))
+                : filteredDates.isEmpty
+                ? Center(
+                  child: Text(
+                    AppLocalizations.of(context)!.noHistoryFound,
+                    style: TextStyle(color: Colors.white, fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  ),
+                )
+                : Scrollbar(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                    child: RefreshIndicator(
+                      color: Colors.black,
+                      onRefresh: _loadHistoryDates,
+                      child: SingleChildScrollView(
+                        physics: AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          children: _buildHistoryCards(),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-        ),
+            ),
+          ]
+        )
       ),
-    );;
+    );
   }
 
   List<Widget> _buildHistoryCards() {
-    return historyDates.map((date) {
+    return filteredDates.map((date) {
       return _buildHistoryCard(date, () {
         _onHistoryPressed(context, date);
       }, () {

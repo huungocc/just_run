@@ -125,14 +125,16 @@ class _ResultState extends State<Result> {
                     ),
                   ),
                 ),
-                Column(
-                  children: [
-                    _buildInformationCard(AppLocalizations.of(context)!.dateTitle, result.dateTime),
-                    _buildInformationCard(AppLocalizations.of(context)!.distanceTitle, result.totalDistance.toStringAsFixed(1)),
-                    _buildInformationCard(AppLocalizations.of(context)!.totalTimeTitle, _formatDuration(result.totalTime)),
-                    _buildInformationCard(AppLocalizations.of(context)!.stepsTitle, result.totalSteps.toString()),
-                    _buildInformationCard(AppLocalizations.of(context)!.caloriesTitle, result.totalCalories.toStringAsFixed(0)),
-                  ],
+                Expanded(
+                  child: Column(
+                    children: [
+                      _buildInformationCard(AppLocalizations.of(context)!.dateTitle, result.dateTime),
+                      _buildInformationCard(AppLocalizations.of(context)!.distanceTitle, result.totalDistance.toStringAsFixed(1)),
+                      _buildInformationCard(AppLocalizations.of(context)!.totalTimeTitle, _formatDuration(result.totalTime)),
+                      _buildInformationCard(AppLocalizations.of(context)!.stepsTitle, result.totalSteps.toString()),
+                      _buildInformationCard(AppLocalizations.of(context)!.caloriesTitle, result.totalCalories.toStringAsFixed(0)),
+                    ],
+                  ),
                 ),
               ],
             ),
