@@ -3,14 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:just_run/manager/fonts.dart';
 
-import 'package:just_run/routes.dart';
+import 'package:just_run/manager/routes.dart';
 import 'package:just_run/services/auth_service.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:just_run/services/data_service.dart';
 import 'package:just_run/services/user_arguments.dart';
+import 'package:just_run/services/network_service.dart';
 
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:permission_handler/permission_handler.dart' as permission_pack;
 
 class Home extends StatefulWidget {
@@ -23,22 +24,20 @@ class _HomeState extends State<Home> {
   final DataService _dataService = DataService();
   User? _currentUser;
   Map<String, dynamic>? _currentUserData;
-  String currentUserAge = '', currentUserHeight = '', currentUserWeight = '';
+  String currentUserWeight = '';
 
-  bool isConnected = false;
-  StreamSubscription ? _internetConnection;
+  final NetworkService _networkService = NetworkService();
 
   @override
   void initState() {
     super.initState();
     _requestPermission();
-    _internetCheck();
     _loadCurrentUser();
   }
 
   @override
   void dispose() {
-    _internetConnection?.cancel();
+    _networkService.dispose();
     super.dispose();
   }
 
@@ -51,7 +50,7 @@ class _HomeState extends State<Home> {
       if (activityRecognitionRequest.isDenied) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Activity Recognition Denied'),
+            content: Text(AppLocalizations.of(context)!.activityRecognitionDenied),
           ),
         );
       }
@@ -62,7 +61,7 @@ class _HomeState extends State<Home> {
       if (locationRequest.isDenied) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Location Denied'),
+            content: Text(AppLocalizations.of(context)!.locationDenied),
           ),
         );
       }
@@ -77,21 +76,12 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _loadUserData() async {
-    try {
-      if (_currentUser != null) {
-        var userData = await _dataService.loadUserData(context, _currentUser!.uid);
-        setState(() {
-          _currentUserData = userData;
-          currentUserWeight = userData?['weight']?.toString() ?? 'no data';
-        });
-      }
-    } catch (e) {
-      print(e);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to load user data: $e'),
-        ),
-      );
+    if (_currentUser != null) {
+      var userData = await _dataService.loadUserData(context, _currentUser!.uid);
+      setState(() {
+        _currentUserData = userData;
+        currentUserWeight = userData?['weight']?.toString() ?? 'no data';
+      });
     }
   }
 
@@ -112,28 +102,6 @@ class _HomeState extends State<Home> {
     await _authService.signOut(context);
     Navigator.pop(context);
     Navigator.pushReplacementNamed(context, Routes.login);
-  }
-
-  void _internetCheck() {
-    _internetConnection = InternetConnection().onStatusChange.listen((event) {
-      switch (event) {
-        case InternetStatus.connected:
-          setState(() {
-            isConnected = true;
-          });
-          break;
-        case InternetStatus.disconnected:
-          setState(() {
-            isConnected = false;
-          });
-          break;
-        default:
-          setState(() {
-            isConnected = false;
-          });
-          break;
-      }
-    });
   }
 
   void _showOptions(BuildContext context) {
@@ -166,7 +134,7 @@ class _HomeState extends State<Home> {
                 ),
                 child: Text(
                   AppLocalizations.of(context)!.freeButton,
-                  style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                 ),
               ),
               SizedBox(height: 16.0),
@@ -187,7 +155,7 @@ class _HomeState extends State<Home> {
                         ),
                         title: Text(
                           AppLocalizations.of(context)!.enterLimitTitle,
-                          style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                         ),
                         content: TextField(
                           cursorColor: Colors.black,
@@ -205,7 +173,7 @@ class _HomeState extends State<Home> {
                             },
                             child: Text(
                               AppLocalizations.of(context)!.cancelButton,
-                              style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                             ),
                           ),
                           TextButton(
@@ -220,7 +188,7 @@ class _HomeState extends State<Home> {
                             },
                             child: Text(
                               AppLocalizations.of(context)!.okButton,
-                              style: TextStyle(fontSize: 18.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 18.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -238,7 +206,7 @@ class _HomeState extends State<Home> {
                 ),
                 child: Text(
                   AppLocalizations.of(context)!.limitButton,
-                  style: TextStyle(fontSize: 20.0, color: Colors.black, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20.0, color: Colors.black, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -256,6 +224,10 @@ class _HomeState extends State<Home> {
     );
   }
 
+  void _settingScreen() {
+    Navigator.pushNamed(context, Routes.setting);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -267,23 +239,26 @@ class _HomeState extends State<Home> {
           leading: Row(
             children: [
               SizedBox(width: 20),
-              CircleAvatar(
-                backgroundImage: AssetImage('assets/default.png'),
-                foregroundImage: NetworkImage(_currentUser!.photoURL!),
-                radius: 18,
+              GestureDetector(
+                onTap: _settingScreen,
+                child: CircleAvatar(
+                  backgroundImage: AssetImage('assets/default.png'),
+                  foregroundImage: NetworkImage(_currentUser!.photoURL!),
+                  radius: 18,
+                ),
               ),
             ],
           ),
           title: Text(
             _currentUser?.displayName ?? AppLocalizations.of(context)!.offlineModeTitle,
-            style: TextStyle(fontSize: 18, color: Colors.black, fontFamily: 'Kanit', fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18, color: Colors.black, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
           ),
           actions: [
             Row(
               children: [
                 IconButton(
                   onPressed: () {
-                    if (isConnected) {
+                    if (_networkService.connectionStatus) {
                       _signOut();
                     } else {
                       _showInternetStatus(context);
@@ -319,24 +294,7 @@ class _HomeState extends State<Home> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                   child: Column(
                     children: [
-                      _buildNetworkCard(AppLocalizations.of(context)!.networkCardTitle, isConnected ? Icons.wifi : Icons.wifi_off),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Column(
-                    children: [
-                      _buildInformationCard(AppLocalizations.of(context)!.ageTitle, () {
-                        _changeInformation(currentUserAge);
-                      }),
-                      _buildInformationCard(AppLocalizations.of(context)!.heightTitle, () {
-                        _changeInformation(currentUserHeight);
-                      }),
-                      _buildInformationCard(AppLocalizations.of(context)!.weightTitle, () {
-                        _changeInformation(currentUserWeight);
-                      }),
-
+                      _buildDailyStepCard('100', Icons.directions_walk),
                     ],
                   ),
                 ),
@@ -379,47 +337,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildInformationCard(String title, VoidCallback onTap) {
-    String currentValue = '';
-    if (_currentUserData != null) {
-      if (title == AppLocalizations.of(context)!.ageTitle) {
-        currentValue = _currentUserData!['age']?.toString() ?? 'no data';
-      } else if (title == AppLocalizations.of(context)!.heightTitle) {
-        currentValue = _currentUserData!['height']?.toString() ?? 'no data';
-      } else if (title == AppLocalizations.of(context)!.weightTitle) {
-        currentValue = _currentUserData!['weight']?.toString() ?? 'no data';
-      }
-    }
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        height: 50.0,
-        margin: EdgeInsets.symmetric(vertical: 2.0),
-        child: Card(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  currentValue,
-                  style: TextStyle(fontFamily: 'Blinker', fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-
   Widget _buildHistoryCard(String title, VoidCallback onTap) {
     return GestureDetector(
       onTap: () {
@@ -440,7 +357,7 @@ class _HomeState extends State<Home> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold,),
+                  style: TextStyle(fontSize: 20.0, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold,),
                 ),
                 Icon(Icons.play_arrow),
               ],
@@ -451,130 +368,38 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildNetworkCard(String title, IconData iconData) {
+  void _navigateToHistory() {
+    _networkService.connectionStatus ? Navigator.pushNamed(context, Routes.history) : _showInternetStatus(context);
+  }
+
+  Widget _buildDailyStepCard(String dailySteps, IconData iconData) {
     return GestureDetector(
-      child: Container(
-        width: double.infinity,
-        height: 50.0,
-        margin: EdgeInsets.symmetric(vertical: 8.0),
-        child: Card(
-          color: Colors.grey[850],
-          elevation: 5.0,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: 'Blinker', fontWeight: FontWeight.bold,),
-                ),
-                Icon(iconData, color: isConnected ? Colors.greenAccent : Colors.redAccent),
-              ],
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          width: 130,
+          height: 50.0,
+          margin: EdgeInsets.symmetric(vertical: 8.0),
+          child: Card(
+            color: Colors.grey[850],
+            elevation: 5.0,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(iconData, color: _networkService.connectionStatus ? Colors.greenAccent : Colors.redAccent),
+                  Text(
+                    dailySteps,
+                    style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: 'Blinker', fontWeight: FontWeight.bold,),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
-  }
-
-  void _navigateToHistory() {
-    isConnected ? Navigator.pushNamed(context, Routes.history) : _showInternetStatus(context);
-  }
-
-  void _changeInformation(String field) {
-    isConnected ? showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        String? ageValue = _currentUserData?['age']?.toString() ?? '';
-        String? heightValue = _currentUserData?['height']?.toString() ?? '';
-        String? weightValue = _currentUserData?['weight']?.toString() ?? '';
-
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          title: Text(
-            AppLocalizations.of(context)!.changeInformationTitle,
-            style: TextStyle(
-              fontSize: 20.0,
-              color: Colors.grey[850],
-              fontFamily: 'Blinker',
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: TextEditingController(text: ageValue),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  ageValue = value;
-                },
-                decoration: InputDecoration(labelText: 'Age', labelStyle: TextStyle(fontFamily: 'Blinker')),
-              ),
-              TextField(
-                controller: TextEditingController(text: heightValue),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                onChanged: (value) {
-                  heightValue = value;
-                },
-                decoration: InputDecoration(labelText: 'Height (cm)', labelStyle: TextStyle(fontFamily: 'Blinker')),
-              ),
-              TextField(
-                controller: TextEditingController(text: weightValue),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                onChanged: (value) {
-                  weightValue = value;
-                },
-                decoration: InputDecoration(labelText: 'Weight (kg)', labelStyle: TextStyle(fontFamily: 'Blinker')),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text(
-                AppLocalizations.of(context)!.cancelButton,
-                style: TextStyle(
-                  fontSize: 20.0,
-                  color: Colors.grey[850],
-                  fontFamily: 'Blinker',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                // Update user data
-                if (_currentUser != null) {
-                  await _dataService.saveUserData(
-                    context, _currentUser!.uid,
-                    int.tryParse(ageValue ?? '0') ?? 0,
-                    double.tryParse(heightValue ?? '0.0') ?? 0.0,
-                    double.tryParse(weightValue ?? '0.0') ?? 0.0,
-                  );
-                  _loadUserData();
-                }
-                Navigator.pop(context);
-              },
-              child: Text(
-                AppLocalizations.of(context)!.okButton,
-                style: TextStyle(
-                  fontSize: 18.0,
-                  color: Colors.grey[850],
-                  fontFamily: 'Blinker',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    ) : _showInternetStatus(context);
   }
 }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:just_run/manager/fonts.dart';
 import 'package:sign_button/sign_button.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:just_run/routes.dart';
+import 'package:just_run/manager/routes.dart';
 import 'package:just_run/services/auth_service.dart';
 
 class Login extends StatefulWidget {
@@ -52,14 +53,14 @@ class _LoginState extends State<Login> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Welcome to', style: TextStyle(fontFamily: 'BlinkerBlack', fontSize: 25, color: Colors.grey[850], height: 1),
+              Text(' Welcome to', style: TextStyle(fontFamily: Fonts.display_font, fontSize: 25, color: Colors.grey[850], height: 1, fontWeight: FontWeight.bold),
               ),
               Text(
                 'JustRun',
-                style: TextStyle(fontFamily: 'BlinkerBlack', fontSize: 70, color: Colors.grey[850], height: 1),
+                style: TextStyle(fontFamily: Fonts.display_font, fontSize: 70, color: Colors.grey[850], height: 1, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 40),
-              Text('Continue with', style: TextStyle(fontFamily: 'Blinker', color: Colors.grey[850], fontWeight: FontWeight.bold, fontSize: 15),
+              Text(' Continue with', style: TextStyle(fontFamily: Fonts.display_font, color: Colors.grey[850], fontWeight: FontWeight.bold, fontSize: 15),
               ),
               SignInButton(
                 buttonType: ButtonType.google,

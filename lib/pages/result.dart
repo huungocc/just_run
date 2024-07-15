@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:just_run/manager/fonts.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'dart:async';
@@ -75,14 +77,14 @@ class _ResultState extends State<Result> {
             backgroundColor: Colors.white,
             title: Text(
               AppLocalizations.of(context)!.resultCardTitle,
-              style: TextStyle(color: Colors.black, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+              style: TextStyle(color: Colors.black, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
             ),
             actions: [
               Row(
                 children: [
                   IconButton(
-                    onPressed: _captureScreenshot,
-                    icon: Icon(Icons.camera_alt_outlined, color: Colors.black),
+                    onPressed: _captureShare,
+                    icon: Icon(Icons.reply, color: Colors.black),
                   ),
                   SizedBox(width: 8)
                 ],
@@ -160,11 +162,11 @@ class _ResultState extends State<Result> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                 ),
                 Text(
                   description,
-                  style: TextStyle(fontFamily: 'Blinker', fontSize: 20, fontWeight: FontWeight.bold,),
+                  style: TextStyle(fontFamily: Fonts.display_font, fontSize: 18, fontWeight: FontWeight.bold,),
                 ),
               ],
             ),
@@ -174,7 +176,7 @@ class _ResultState extends State<Result> {
     );
   }
 
-  Future<void> _captureScreenshot() async {
+  Future<void> _captureShare() async {
     var status = await Permission.storage.status;
     if (!status.isGranted) {
       await Permission.storage.request();
@@ -192,7 +194,15 @@ class _ResultState extends State<Result> {
     if (image != null) {
       File imgFile = File(filePath);
       await imgFile.writeAsBytes(image);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Screenshot saved!', style: TextStyle(fontSize: 15.0, fontFamily: 'Blinker'))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.screenShotSaved, style: TextStyle(fontSize: 15.0, fontFamily: Fonts.display_font))));
+    }
+
+    final result = await Share.shareXFiles([XFile(filePath)]);
+
+    if (result.status == ShareResultStatus.success) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.shareSuccessfully, style: TextStyle(fontSize: 15.0, fontFamily: Fonts.display_font))));
+    } else if (result.status == ShareResultStatus.dismissed) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.shareDismissed, style: TextStyle(fontSize: 15.0, fontFamily: Fonts.display_font))));
     }
   }
 }

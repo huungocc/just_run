@@ -2,8 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:just_run/manager/fonts.dart';
 
-import 'package:just_run/routes.dart';
+import 'package:just_run/manager/routes.dart';
 import 'package:just_run/services/data_service.dart';
 import 'package:just_run/services/result_arguments.dart';
 
@@ -64,7 +65,7 @@ class _HistoryState extends State<History> {
           backgroundColor: Colors.white,
           title: Text(
             AppLocalizations.of(context)!.historyCardTitle,
-            style: TextStyle(color: Colors.black, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+            style: TextStyle(color: Colors.black, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
           ),
           actions: historyDates.isEmpty
             ? []
@@ -103,7 +104,7 @@ class _HistoryState extends State<History> {
                   borderRadius: BorderRadius.all(Radius.circular(10.0)),
                 ),
                 child: DropdownButton2<String>(
-                  style: TextStyle(color: Colors.white, fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Colors.white, fontSize: 20.0, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                   iconStyleData: IconStyleData(
                     icon: Icon(Icons.filter_list_outlined, color: Colors.white, size: 25),
                   ),
@@ -125,13 +126,13 @@ class _HistoryState extends State<History> {
                         expands: true,
                         maxLines: null,
                         controller: textEditingController,
-                        style: TextStyle(color: Colors.white, fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                        style: TextStyle(color: Colors.white, fontSize: 20.0, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                         cursorColor: Colors.white,
                         decoration: InputDecoration(
                           isDense: true,
                           contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           hintText: 'Search',
-                          hintStyle: TextStyle(color: Colors.grey, fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                          hintStyle: TextStyle(color: Colors.grey, fontSize: 20.0, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(color: Colors.white),
@@ -181,20 +182,16 @@ class _HistoryState extends State<History> {
                 ? Center(
                   child: Text(
                     AppLocalizations.of(context)!.noHistoryFound,
-                    style: TextStyle(color: Colors.white, fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                    style: TextStyle(color: Colors.white, fontSize: 20.0, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                   ),
                 )
                 : Scrollbar(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                    child: RefreshIndicator(
-                      color: Colors.black,
-                      onRefresh: _loadHistoryDates,
-                      child: SingleChildScrollView(
-                        physics: AlwaysScrollableScrollPhysics(),
-                        child: Column(
-                          children: _buildHistoryCards(),
-                        ),
+                    child: SingleChildScrollView(
+                      physics: AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: _buildHistoryCards(),
                       ),
                     ),
                   ),
@@ -233,7 +230,7 @@ class _HistoryState extends State<History> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20.0, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                 ),
                 Icon(Icons.play_arrow)
               ],
@@ -285,13 +282,13 @@ class _HistoryState extends State<History> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),
-        title: Text(AppLocalizations.of(context)!.deleteEachTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.deleteEachTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
         actions: <Widget>[
           TextButton(
             onPressed: () {
               Navigator.pop(context, false);
             },
-            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
           ),
           TextButton(
             onPressed: () async {
@@ -299,7 +296,7 @@ class _HistoryState extends State<History> {
               Navigator.pop(context, true);
               _loadHistoryDates();
             },
-            child: Text(AppLocalizations.of(context)!.deleteButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.deleteButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -313,13 +310,13 @@ class _HistoryState extends State<History> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),
-        title: Text(AppLocalizations.of(context)!.deleteAllTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.deleteAllTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
         actions: <Widget>[
           TextButton(
             onPressed: () {
               Navigator.pop(context, false);
             },
-            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
           ),
           TextButton(
             onPressed: () async {
@@ -327,7 +324,7 @@ class _HistoryState extends State<History> {
               Navigator.pop(context, true);
               _loadHistoryDates();
             },
-            child: Text(AppLocalizations.of(context)!.deleteButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.deleteButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

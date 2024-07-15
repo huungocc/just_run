@@ -5,4 +5,5 @@ class Routes{
   static const String running = '/running';
   static const String result = '/result';
   static const String history = '/history';
+  static const String setting = '/setting';
 }
