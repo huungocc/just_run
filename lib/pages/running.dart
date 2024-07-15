@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:just_run/manager/fonts.dart';
 import 'package:just_run/services/data_service.dart';
 import 'package:location/location.dart' as location_pack;
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-import 'package:just_run/routes.dart';
+import 'package:just_run/manager/routes.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:just_run/services/location_list.dart';
@@ -309,19 +309,19 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),
-        title: Text(AppLocalizations.of(context)!.exitTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.exitTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
         actions: <Widget>[
           TextButton(
             onPressed: () {
               Navigator.pop(context, false);
             },
-            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context, true);
             },
-            child: Text(AppLocalizations.of(context)!.exitButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.exitButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -335,13 +335,13 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),
-        title: Text(AppLocalizations.of(context)!.stopTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.stopTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
         actions: <Widget>[
           TextButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
           ),
           TextButton(
             onPressed: () {
@@ -359,7 +359,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                 _polylines,
               );
             },
-            child: Text(AppLocalizations.of(context)!.stopButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.stopButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -374,13 +374,13 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),
-        title: Text(AppLocalizations.of(context)!.reachLimitTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.reachLimitTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
         actions: <Widget>[
           TextButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text(AppLocalizations.of(context)!.okButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.okButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
           ),
         ],
       )
@@ -403,8 +403,8 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
             title: Text(
               AppLocalizations.of(context)!.runningCardTitle,
               style: TextStyle(
-                color: isLockOn ? Colors.white : Colors.black,
-                fontFamily: 'Blinker',
+                color: Colors.black,
+                fontFamily: Fonts.display_font,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -412,9 +412,15 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
           ),
         ),
         body: currentLocation == null
-            ? Center(child: SpinKitThreeBounce(color: Colors.black, size: 30.0))
-            : Column(
-          children: [
+          ? Center(child: SpinKitThreeBounce(color: Colors.black, size: 30.0))
+          : Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+                color: isLockOn ? Colors.black : Colors.white
+            ),
+            child: Column(
+                      children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
               child: ClipRRect(
@@ -534,8 +540,9 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                 ],
               ),
             ),
-          ],
-        ),
+            ],
+            ),
+          ),
       ),
     );
   }
@@ -556,14 +563,14 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                 Text(
                   title,
                   style: TextStyle(
-                      fontSize: 30.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold,
+                      fontSize: 30.0, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold,
                       color: isLockOn ? Colors.white : Colors.black87
                   ),
                 ),
                 Text(
                   description,
                   style: TextStyle(
-                      fontFamily: 'Blinker', fontSize: 12, fontWeight: FontWeight.bold,
+                      fontFamily: Fonts.display_font, fontSize: 12, fontWeight: FontWeight.bold,
                       color: isLockOn ? Colors.white : Colors.black87
                   ),
                 ),

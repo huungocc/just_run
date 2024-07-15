@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 
-import 'package:just_run/pages/history.dart';
-import 'package:just_run/pages/login.dart';
-import 'package:just_run/pages/home.dart';
-import 'package:just_run/pages/result.dart';
-import 'package:just_run/pages/running.dart';
-import 'package:just_run/pages/loading.dart';
-import 'package:just_run/routes.dart';
+import 'manager/locale_provider.dart';
+import 'pages/history.dart';
+import 'pages/login.dart';
+import 'pages/home.dart';
+import 'pages/result.dart';
+import 'pages/running.dart';
+import 'pages/loading.dart';
+import 'pages/setting.dart';
+import 'manager/routes.dart';
 
 void main() async {
       WidgetsFlutterBinding.ensureInitialized();
@@ -20,25 +23,32 @@ void main() async {
 class MyApp extends StatelessWidget {
       @override
       Widget build(BuildContext context) {
-            return MaterialApp(
-                  initialRoute: Routes.loading,
-                  routes: {
-                        Routes.loading: (context) => Loading(),
-                        Routes.login: (context) => Login(),
-                        Routes.home: (context) => Home(),
-                        Routes.running: (context) => Running(),
-                        Routes.history: (context) => History(),
-                        Routes.result: (context) => Result(),
-                  },
-                  localizationsDelegates: [
-                        AppLocalizations.delegate,
-                        GlobalMaterialLocalizations.delegate,
-                        GlobalWidgetsLocalizations.delegate,
-                        GlobalCupertinoLocalizations.delegate,
-                  ],
-                  supportedLocales: [
-                        Locale('en'),
-                  ],
+            return ChangeNotifierProvider(
+                  create: (_) => LocaleProvider(),
+                  child: Consumer<LocaleProvider>(
+                        builder: (context, provider, child) {
+                              return MaterialApp(
+                                    initialRoute: Routes.loading,
+                                    routes: {
+                                          Routes.loading: (context) => Loading(),
+                                          Routes.login: (context) => Login(),
+                                          Routes.home: (context) => Home(),
+                                          Routes.running: (context) => Running(),
+                                          Routes.history: (context) => History(),
+                                          Routes.result: (context) => Result(),
+                                          Routes.setting: (context) => Setting(),
+                                    },
+                                    localizationsDelegates: [
+                                          AppLocalizations.delegate,
+                                          GlobalMaterialLocalizations.delegate,
+                                          GlobalWidgetsLocalizations.delegate,
+                                          GlobalCupertinoLocalizations.delegate,
+                                    ],
+                                    supportedLocales: L10n.all,
+                                    locale: provider.locale,
+                              );
+                        },
+                  ),
             );
       }
 }
