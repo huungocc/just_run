@@ -3,10 +3,11 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:just_run/manager/fonts.dart';
 import 'package:just_run/manager/locale_provider.dart';
 import 'package:just_run/services/data_service.dart';
+import 'package:just_run/services/network_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+
 import 'package:provider/provider.dart';
 
 class Setting extends StatefulWidget {
@@ -16,12 +17,11 @@ class Setting extends StatefulWidget {
 
 class _SettingState extends State<Setting> {
   final DataService _dataService = DataService();
+  final NetworkService _networkService = NetworkService();
 
   User? _currentUser;
   Map<String, dynamic>? _currentUserData;
   String currentUserAge = '', currentUserHeight = '', currentUserWeight = '';
-  bool isConnected = true;
-  StreamSubscription ? _internetConnection;
 
   final List<String> languageItems = [
     'English',
@@ -31,36 +31,7 @@ class _SettingState extends State<Setting> {
   @override
   void initState() {
     super.initState();
-    _internetCheck();
     _loadCurrentUser();
-  }
-
-  @override
-  void dispose() {
-    _internetConnection?.cancel();
-    super.dispose();
-  }
-
-  void _internetCheck() {
-    _internetConnection = InternetConnection().onStatusChange.listen((event) {
-      switch (event) {
-        case InternetStatus.connected:
-          setState(() {
-            isConnected = true;
-          });
-          break;
-        case InternetStatus.disconnected:
-          setState(() {
-            isConnected = false;
-          });
-          break;
-        default:
-          setState(() {
-            isConnected = false;
-          });
-          break;
-      }
-    });
   }
 
   void _showInternetStatus(BuildContext context){
@@ -279,7 +250,7 @@ class _SettingState extends State<Setting> {
   }
 
   void _changeInformation(String field) {
-    isConnected ? showDialog(
+    _networkService.connectionStatus ? showDialog(
       context: context,
       builder: (BuildContext context) {
         String? ageValue = _currentUserData?['age']?.toString() ?? '';

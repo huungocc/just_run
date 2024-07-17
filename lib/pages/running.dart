@@ -1,5 +1,10 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/animation.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -16,6 +21,7 @@ import 'package:just_run/services/location_list.dart';
 
 import '../services/user_arguments.dart';
 import 'package:just_run/services/result_arguments.dart';
+import 'package:just_run/manager/marker_title.dart';
 
 import 'package:vibration/vibration.dart';
 
@@ -34,6 +40,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
 
   location_pack.Location location = location_pack.Location();
   LatLng? currentLocation;
+  Marker? currentMarker;
   late GoogleMapController mapController;
   static const LatLng defaultLocation = LatLng(21.0278, 105.8342);
   StreamSubscription<location_pack.LocationData>? locationSubscription;
@@ -51,6 +58,8 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
 
   Completer<GoogleMapController> _controller = Completer();
   Set<Polyline> _polylines = {};
+  Set<Marker> _markers = {};
+  String user_marker = 'user_marker';
 
   late double _currentUserWeight;
   double _currentCalories = 0.0;
@@ -76,13 +85,107 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     _timer = Timer(Duration.zero, () {});
 
     checkLocationServiceEnabled();
-
   }
 
   void _loadCurrentUser() {
     setState(() {
       _currentUser = FirebaseAuth.instance.currentUser;
     });
+  }
+
+  void _updateUserMarker() async {
+    Marker userMarker = await createMarkerWithCustomIcon(
+      _currentUser!.photoURL!,
+      currentLocation!,
+      MarkerTitle.user_marker,
+          () {},
+    );
+
+    setState(() {
+      _markers.removeWhere((marker) => marker.markerId.value == MarkerTitle.user_marker);
+      _markers.add(userMarker);
+    });
+  }
+
+  Future<Marker> createMarkerWithCustomIcon(String imageUrl, LatLng position, String markerTitle, Function()? onTap) async {
+    final BitmapDescriptor customIcon = await getMarkerIcon(imageUrl, Size(80, 80));
+
+    final Marker marker = Marker(
+      markerId: MarkerId(markerTitle),
+      position: position,
+      icon: customIcon,
+      onTap: onTap,
+      anchor: Offset(0.5, 0.5),
+    );
+
+    return marker;
+  }
+
+  Future<BitmapDescriptor> getMarkerIcon(String imageUrl, Size size) async {
+    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    final Radius radius = Radius.circular(size.width / 2);
+
+    final Paint shadowPaint = Paint()..color = Colors.white.withAlpha(100);
+    final double shadowWidth = 15.0;
+
+    final Paint borderPaint = Paint()..color = Colors.white;
+    final double borderWidth = 3.0;
+
+    final double imageOffset = shadowWidth + borderWidth;
+
+    // Shadow circle
+    canvas.drawRRect(
+        RRect.fromRectAndCorners(
+          Rect.fromLTWH(0.0, 0.0, size.width, size.height),
+          topLeft: radius,
+          topRight: radius,
+          bottomLeft: radius,
+          bottomRight: radius,
+        ),
+        shadowPaint);
+
+    // Border circle
+    canvas.drawRRect(
+        RRect.fromRectAndCorners(
+          Rect.fromLTWH(shadowWidth, shadowWidth, size.width - (shadowWidth * 2),
+              size.height - (shadowWidth * 2)),
+          topLeft: radius,
+          topRight: radius,
+          bottomLeft: radius,
+          bottomRight: radius,
+        ),
+        borderPaint);
+
+    // Oval for the image
+    Rect oval = Rect.fromLTWH(imageOffset, imageOffset,
+        size.width - (imageOffset * 2), size.height - (imageOffset * 2));
+
+    // Clip oval path for image
+    canvas.clipPath(Path()..addOval(oval));
+
+    // Fetch and draw the network image
+    ui.Image image = await _fetchNetworkImage(imageUrl);
+    paintImage(canvas: canvas, image: image, rect: oval, fit: BoxFit.cover);
+
+    // Convert canvas to image
+    final ui.Image markerAsImage = await pictureRecorder
+        .endRecording()
+        .toImage(size.width.toInt(), size.height.toInt());
+
+    // Convert image to bytes
+    final ByteData? byteData = await markerAsImage.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List uint8List = byteData!.buffer.asUint8List();
+
+    return BitmapDescriptor.fromBytes(uint8List);
+  }
+
+  Future<ui.Image> _fetchNetworkImage(String imageUrl) async {
+    final http.Response response = await http.get(Uri.parse(imageUrl));
+    final Uint8List imageBytes = response.bodyBytes;
+    final ui.Codec codec = await ui.instantiateImageCodec(imageBytes);
+    final ui.FrameInfo fi = await codec.getNextFrame();
+    return fi.image;
   }
 
   Future<void> checkLocationServiceEnabled() async {
@@ -99,12 +202,14 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     setState(() {
       currentLocation = LatLng(_locationData.latitude!, _locationData.longitude!);
       _updateCameraPosition();
+      _updateUserMarker();
     });
 
     locationSubscription = location!.onLocationChanged.listen((location_pack.LocationData newLocation) {
       setState(() {
         currentLocation = LatLng(newLocation.latitude!, newLocation.longitude!);
         _updateCameraPosition();
+        _updateUserMarker();
       });
     });
   }
@@ -127,7 +232,6 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     locationSubscription?.cancel();
     _timer.cancel();
     stopCountingSteps();
-    _polylines.clear();
     super.dispose();
   }
 
@@ -256,12 +360,18 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
       points: polylinePoints,
     );
 
+    Marker startMarker = Marker(
+      markerId: MarkerId('start_marker_${_polylines.length}'),
+      position: polylinePoints.first,
+      infoWindow: InfoWindow(title: MarkerTitle.start_marker),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+    );
+
     setState(() {
       _polylines.add(polyline);
+      _markers.add(startMarker);
     });
   }
-
-
 
   double _getMet(double averageSpeed) {
     if (averageSpeed >= 17.5) {
@@ -431,11 +541,12 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                     visible: !isLockOn,
                     maintainState: true,
                     child: GoogleMap(
-                      myLocationEnabled: true,
                       myLocationButtonEnabled: true,
+                      myLocationEnabled: false,
                       zoomControlsEnabled: false,
                       initialCameraPosition: CameraPosition(target: currentLocation!, zoom: 15),
                       polylines: _polylines,
+                      markers: _markers,
                       onMapCreated: (GoogleMapController controller) {
                         mapController = controller;
                         mapController.animateCamera(CameraUpdate.newCameraPosition(

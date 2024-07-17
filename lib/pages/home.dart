@@ -10,8 +10,8 @@ import 'package:just_run/services/auth_service.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:just_run/services/data_service.dart';
 import 'package:just_run/services/user_arguments.dart';
+import 'package:just_run/services/network_service.dart';
 
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:permission_handler/permission_handler.dart' as permission_pack;
 
 class Home extends StatefulWidget {
@@ -24,22 +24,20 @@ class _HomeState extends State<Home> {
   final DataService _dataService = DataService();
   User? _currentUser;
   Map<String, dynamic>? _currentUserData;
-  String currentUserAge = '', currentUserHeight = '', currentUserWeight = '';
+  String currentUserWeight = '';
 
-  bool isConnected = false;
-  StreamSubscription ? _internetConnection;
+  final NetworkService _networkService = NetworkService();
 
   @override
   void initState() {
     super.initState();
     _requestPermission();
-    _internetCheck();
     _loadCurrentUser();
   }
 
   @override
   void dispose() {
-    _internetConnection?.cancel();
+    _networkService.dispose();
     super.dispose();
   }
 
@@ -104,28 +102,6 @@ class _HomeState extends State<Home> {
     await _authService.signOut(context);
     Navigator.pop(context);
     Navigator.pushReplacementNamed(context, Routes.login);
-  }
-
-  void _internetCheck() {
-    _internetConnection = InternetConnection().onStatusChange.listen((event) {
-      switch (event) {
-        case InternetStatus.connected:
-          setState(() {
-            isConnected = true;
-          });
-          break;
-        case InternetStatus.disconnected:
-          setState(() {
-            isConnected = false;
-          });
-          break;
-        default:
-          setState(() {
-            isConnected = false;
-          });
-          break;
-      }
-    });
   }
 
   void _showOptions(BuildContext context) {
@@ -282,7 +258,7 @@ class _HomeState extends State<Home> {
               children: [
                 IconButton(
                   onPressed: () {
-                    if (isConnected) {
+                    if (_networkService.connectionStatus) {
                       _signOut();
                     } else {
                       _showInternetStatus(context);
@@ -314,6 +290,14 @@ class _HomeState extends State<Home> {
             physics: AlwaysScrollableScrollPhysics(),
             child: Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: Column(
+                    children: [
+                      _buildDailyStepCard('100', Icons.directions_walk),
+                    ],
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: Column(
@@ -385,7 +369,37 @@ class _HomeState extends State<Home> {
   }
 
   void _navigateToHistory() {
-    isConnected ? Navigator.pushNamed(context, Routes.history) : _showInternetStatus(context);
+    _networkService.connectionStatus ? Navigator.pushNamed(context, Routes.history) : _showInternetStatus(context);
   }
 
+  Widget _buildDailyStepCard(String dailySteps, IconData iconData) {
+    return GestureDetector(
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          width: 130,
+          height: 50.0,
+          margin: EdgeInsets.symmetric(vertical: 8.0),
+          child: Card(
+            color: Colors.grey[850],
+            elevation: 5.0,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(iconData, color: _networkService.connectionStatus ? Colors.greenAccent : Colors.redAccent),
+                  Text(
+                    dailySteps,
+                    style: TextStyle(fontSize: 20.0, color: Colors.white, fontFamily: 'Blinker', fontWeight: FontWeight.bold,),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
