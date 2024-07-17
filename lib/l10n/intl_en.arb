@@ -1,4 +1,5 @@
 {
+  "reportCardTitle": "Report",
   "resultCardTitle": "Result",
   "runningCardTitle": "Running",
   "networkCardTitle": "Network",
@@ -15,8 +16,8 @@
   "deleteButton": "Delete",
 
   "ageTitle": "Age",
-  "heightTitle": "Height (cm)",
-  "weightTitle": "Weight (kg)",
+  "heightTitle": "Height",
+  "weightTitle": "Weight",
 
   "dateTitle": "Date",
   "distanceTitle": "Distance (km)",
@@ -28,6 +29,7 @@
   "offlineModeTitle": "Offline Mode",
   "changeInformationTitle": "Change Information",
   "enterLimitTitle": "Enter your limit (km)",
+  "enterDailyLimitTitle": "Enter your daily limit",
 
   "exitTitle": "Exit without saving?",
   "stopTitle": "Stop running",
@@ -50,5 +52,16 @@
   "locationDenied": "Location Denied",
   "shareDismissed": "Share dismissed",
   "shareSuccessfully": "Screenshot shared successfully!",
-  "screenShotSaved": "Screenshot saved!"
+  "screenShotSaved": "Screenshot saved!",
+
+  "monday": "MON",
+  "tuesday": "TUE",
+  "wednesday": "WED",
+  "thursday": "THU",
+  "friday": "FRI",
+  "saturday": "SAT",
+  "sunday": "SUN",
+
+  "stepsChart": "Steps - last 7 days",
+  "caloChart": "Calories - last 7 days"
 }

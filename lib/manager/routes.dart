@@ -4,6 +4,6 @@ class Routes{
   static const String home = '/home';
   static const String running = '/running';
   static const String result = '/result';
-  static const String history = '/history';
+  static const String report = '/report';
   static const String setting = '/setting';
 }

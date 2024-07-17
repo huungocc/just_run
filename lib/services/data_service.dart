@@ -43,6 +43,42 @@ class DataService {
     }
   }
 
+  Future<void> saveLimitData(BuildContext context, String userId, int limitSteps, double limitCalories) async {
+    try {
+      await _db.collection('users').doc(userId).collection('limits').doc('limitData').set({
+        'limitSteps': limitSteps,
+        'limitCalories': limitCalories,
+      });
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.saveDataFailed + ': $e'),
+        ),
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>?> loadLimitData(BuildContext context, String userId) async {
+    try {
+      var doc = await _db.collection('users').doc(userId).collection('limits').doc('limitData').get();
+      if (doc.exists) {
+        return doc.data();
+      } else {
+        print(AppLocalizations.of(context)!.userDataFailed + ' $userId');
+        return null;
+      }
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.loadDataFailed + ': $e'),
+        ),
+      );
+      return null;
+    }
+  }
+
   Future<void> saveRunningData(BuildContext context, String userId, String dateTime, double totalDistance, Duration totalTime, int totalSteps, double totalCalories, Set<Polyline> polylines) async {
     try {
       List<Map<String, dynamic>> polylineList = polylines.map((polyline) {

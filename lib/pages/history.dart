@@ -11,12 +11,12 @@ import 'package:just_run/services/result_arguments.dart';
 import 'package:vibration/vibration.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 
-class History extends StatefulWidget {
+class Report extends StatefulWidget {
   @override
-  State<History> createState() => _HistoryState();
+  State<Report> createState() => _HistoryState();
 }
 
-class _HistoryState extends State<History> {
+class _HistoryState extends State<Report> {
   User? _currentUser;
   List<String> historyDates = [];
   List<String> historyByDates = [];
@@ -64,7 +64,7 @@ class _HistoryState extends State<History> {
         child: AppBar(
           backgroundColor: Colors.white,
           title: Text(
-            AppLocalizations.of(context)!.historyCardTitle,
+            AppLocalizations.of(context)!.reportCardTitle,
             style: TextStyle(color: Colors.black, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
           ),
           actions: historyDates.isEmpty
