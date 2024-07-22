@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:just_run/manager/routes.dart';
 import 'package:just_run/services/auth_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -56,7 +57,7 @@ class _LoginState extends State<Login> {
               Text(' Welcome to', style: TextStyle(fontFamily: Fonts.display_font, fontSize: 25, color: Colors.grey[850], height: 1, fontWeight: FontWeight.bold),
               ),
               Text(
-                'JustRun',
+                AppLocalizations.of(context)!.appName,
                 style: TextStyle(fontFamily: Fonts.display_font, fontSize: 70, color: Colors.grey[850], height: 1, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 40),

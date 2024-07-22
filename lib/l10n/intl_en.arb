@@ -1,4 +1,6 @@
 {
+  "appName": "JustRun",
+  "reportCardTitle": "Report",
   "resultCardTitle": "Result",
   "runningCardTitle": "Running",
   "networkCardTitle": "Network",
@@ -15,19 +17,20 @@
   "deleteButton": "Delete",
 
   "ageTitle": "Age",
-  "heightTitle": "Height (cm)",
-  "weightTitle": "Weight (kg)",
+  "heightTitle": "Height",
+  "weightTitle": "Weight",
 
   "dateTitle": "Date",
   "distanceTitle": "Distance (km)",
   "totalTimeTitle": "Total time",
   "stepsTitle": "Steps",
   "caloriesTitle": "Calories",
-  "speedTitle": "Speed (km/h)",
+  "paceTitle": "Pace (min/km)",
 
   "offlineModeTitle": "Offline Mode",
   "changeInformationTitle": "Change Information",
   "enterLimitTitle": "Enter your limit (km)",
+  "enterDailyLimitTitle": "Enter your daily limit",
 
   "exitTitle": "Exit without saving?",
   "stopTitle": "Stop running",
@@ -48,7 +51,20 @@
   "deleteDataFailed": "Failed to delete",
   "activityRecognitionDenied": "Activity Recognition Denied",
   "locationDenied": "Location Denied",
+  "notificationDenied": "Notification Denied",
+  "batteryDenied": "Ignore Battery Optimizations Denied",
   "shareDismissed": "Share dismissed",
   "shareSuccessfully": "Screenshot shared successfully!",
-  "screenShotSaved": "Screenshot saved!"
+  "screenShotSaved": "Screenshot saved!",
+
+  "monday": "MON",
+  "tuesday": "TUE",
+  "wednesday": "WED",
+  "thursday": "THU",
+  "friday": "FRI",
+  "saturday": "SAT",
+  "sunday": "SUN",
+
+  "stepsChart": "Steps - last 7 days",
+  "caloChart": "Calories - last 7 days"
 }

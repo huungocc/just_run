@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
                                           Routes.login: (context) => Login(),
                                           Routes.home: (context) => Home(),
                                           Routes.running: (context) => Running(),
-                                          Routes.history: (context) => History(),
+                                          Routes.report: (context) => Report(),
                                           Routes.result: (context) => Result(),
                                           Routes.setting: (context) => Setting(),
                                     },
