@@ -125,13 +125,10 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
     final Canvas canvas = Canvas(pictureRecorder);
     final Radius radius = Radius.circular(size.width / 2);
-
     final Paint shadowPaint = Paint()..color = Colors.white.withAlpha(100);
     final double shadowWidth = 15.0;
-
     final Paint borderPaint = Paint()..color = Colors.white;
     final double borderWidth = 3.0;
-
     final double imageOffset = shadowWidth + borderWidth;
 
     // Shadow circle
@@ -417,7 +414,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
+          borderRadius: BorderRadius.circular(30.0),
         ),
         title: Text(AppLocalizations.of(context)!.exitTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
         actions: <Widget>[
@@ -425,7 +422,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
             onPressed: () {
               Navigator.pop(context, false);
             },
-            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font)),
           ),
           TextButton(
             onPressed: () {
@@ -443,7 +440,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
+          borderRadius: BorderRadius.circular(30.0),
         ),
         title: Text(AppLocalizations.of(context)!.stopTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
         actions: <Widget>[
@@ -451,7 +448,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font)),
           ),
           TextButton(
             onPressed: () {
@@ -482,7 +479,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
+          borderRadius: BorderRadius.circular(30.0),
         ),
         title: Text(AppLocalizations.of(context)!.reachLimitTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
         actions: <Widget>[
@@ -590,7 +587,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                       visible: /* limit > 0 && */!isLockOn,
                       maintainState: true,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.all(Radius.circular(7)),
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
                         child: LinearProgressIndicator(
                           value: progress,
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
@@ -664,6 +661,10 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
         height: 100.0,
         margin: EdgeInsets.symmetric(vertical: 4.0),
         child: Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
           color: isLockOn ? Colors.black : Colors.grey[300],
           child: Padding(
             padding: EdgeInsets.all(15.0),

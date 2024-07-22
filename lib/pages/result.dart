@@ -96,6 +96,7 @@ class _ResultState extends State<Result> {
         body: Container(
           width: double.infinity,
           height: double.infinity,
+          color: Colors.white,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Column(
@@ -103,7 +104,7 @@ class _ResultState extends State<Result> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(5, 0, 5, 8),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16.0),
+                    borderRadius: BorderRadius.circular(20.0),
                     child: Container(
                       height: 255,
                       child: GoogleMap(
@@ -153,6 +154,10 @@ class _ResultState extends State<Result> {
         height: 74.0,
         margin: EdgeInsets.symmetric(vertical: 5.0),
         child: Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
           color: Colors.grey[300],
           child: Padding(
             padding: EdgeInsets.fromLTRB(16, 0, 16, 0),

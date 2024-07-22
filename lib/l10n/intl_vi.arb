@@ -1,4 +1,5 @@
 {
+  "reportCardTitle": "Thống kê",
   "resultCardTitle": "Kết quả",
   "runningCardTitle": "Chạy bộ",
   "networkCardTitle": "Mạng",
@@ -15,8 +16,8 @@
   "deleteButton": "Xóa",
 
   "ageTitle": "Tuổi",
-  "heightTitle": "Chiều cao (cm)",
-  "weightTitle": "Cân nặng (kg)",
+  "heightTitle": "Chiều cao",
+  "weightTitle": "Cân nặng",
 
   "dateTitle": "Ngày",
   "distanceTitle": "Quãng đường (km)",
@@ -28,6 +29,7 @@
   "offlineModeTitle": "Ngoại tuyến",
   "changeInformationTitle": "Thông tin",
   "enterLimitTitle": "Nhập giới hạn (km)",
+  "enterDailyLimitTitle": "Nhập giới hạn hằng ngày",
 
   "exitTitle": "Thoát mà không lưu?",
   "stopTitle": "Dừng chạy",
@@ -50,5 +52,16 @@
   "locationDenied": "Quyền Vị Trí bị từ chối",
   "shareDismissed": "Đã hủy chia sẻ",
   "shareSuccessfully": "Chia sẻ thành công!",
-  "screenShotSaved": "Đã lưu ảnh chụp màn hình!"
+  "screenShotSaved": "Đã lưu ảnh chụp màn hình!",
+
+  "monday": "T2",
+  "tuesday": "T3",
+  "wednesday": "T4",
+  "thursday": "T5",
+  "friday": "T6",
+  "saturday": "T7",
+  "sunday": "CN",
+
+  "stepsChart": "Bước chân - 7 ngày gần đây",
+  "caloChart": "Calo tiêu thụ - 7 ngày gần đây"
 }
