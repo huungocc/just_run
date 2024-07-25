@@ -1,14 +1,16 @@
 import 'dart:async';
-
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:just_run/manager/background_title.dart';
+import 'package:just_run/services/background_service.dart';
+import 'package:just_run/services/database_helper.dart';
 import 'package:page_view_indicators/page_view_indicators.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:just_run/manager/fonts.dart';
 
 import 'package:just_run/manager/routes.dart';
-import 'package:just_run/services/auth_service.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:just_run/services/data_service.dart';
 import 'package:just_run/services/user_arguments.dart';
@@ -17,6 +19,7 @@ import 'package:pedometer/pedometer.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 import 'package:permission_handler/permission_handler.dart' as permission_pack;
+import 'package:flutter_background_service/flutter_background_service.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -24,40 +27,115 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  final AuthService _authService = AuthService();
   final DataService _dataService = DataService();
   User? _currentUser;
   Map<String, dynamic>? _currentUserData;
   Map<String, dynamic>? _currentLimitData;
-  String currentUserWeight = '';
+  String currentUserWeight = '', currentUserHeight = '';
 
   final NetworkService _networkService = NetworkService();
 
   final _currentPageNotifier = ValueNotifier<int>(0);
 
-  late Stream<StepCount> _dailyStepsCountStream;
+  late StreamSubscription<StepCount> dailyStepsCountStream;
 
-  int _currentSteps = 0;
-  double _currentCalories = 0;
+  bool isStarting = false;
+  int _startSteps = 0, _todaySteps = 0;
+  double _todayCalories = 0;
   String currentLimitSteps = '0', currentLimitCalories = '0';
+
+  late Timer _timer;
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
   @override
   void initState() {
     super.initState();
     _requestPermission();
+    initializeStepService();
     _loadCurrentUser();
-    initPedometer();
+    _startTimer();
+  }
+
+  void initializeStepService() async {
+    await _checkDate();
+    _loadLimitDataFromDatabase();
+    if(_networkService.connectionStatus && currentLimitSteps == 0 && currentLimitCalories == 0){
+      _loadLimitDataFromFirestore();
+    }
+    _onPressedCount();
   }
 
   @override
   void dispose() {
     _networkService.dispose();
+    _timer.cancel();
+    stopPedometer();
     super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(minutes: 30), (timer) async {
+      await _checkDate();
+    });
+  }
+
+  Future<void> _saveDailyDataToDatabase() async {
+    String today = DateFormat('dd-MM-yyyy').format(DateTime.now());
+    await _dbHelper.saveData(today, _todaySteps, _startSteps, _todayCalories);
+  }
+
+  Future<void> _saveDailyDataToFirestore() async {
+    String today = DateFormat('dd-MM-yyyy').format(DateTime.now());
+    if(_networkService.connectionStatus) {
+      if (_currentUser != null) {
+        await _dataService.saveDailyData(
+            context,
+            _currentUser!.uid,
+            today,
+            _todaySteps,
+            _startSteps,
+            _todayCalories
+        );
+      }
+    }
+  }
+
+  Future<void> _checkDate() async {
+    String today = DateFormat('dd-MM-yyyy').format(DateTime.now());
+
+    String? _lastestDateFromDatabase = await _dbHelper.loadLatestDate();
+    int? _startStepsFromDatabase = await _dbHelper.loadStartSteps(today);
+
+    if (today != _lastestDateFromDatabase){
+      setState(() {
+        _startSteps = 0;
+      });
+    } else {
+      setState(() {
+        _startSteps = _startStepsFromDatabase!;
+      });
+    }
+
+    if(_networkService.connectionStatus && _lastestDateFromDatabase == null && _startStepsFromDatabase == null){
+      String? _loadDateKey = await _dataService.loadLatestDate(context, _currentUser!.uid);
+      int? _loadStartSteps = await _dataService.loadStartSteps(context, _currentUser!.uid, today);
+      if (today != _loadDateKey){
+        setState(() {
+          _startSteps = 0;
+        });
+      } else {
+        setState(() {
+          _startSteps = _loadStartSteps!;
+        });
+      }
+    }
   }
 
   Future<void> _requestPermission() async {
     final activityRecognitionStatus = await permission_pack.Permission.activityRecognition.status;
     final locationStatus = await permission_pack.Permission.location.status;
+    final notificationStatus = await permission_pack.Permission.notification.status;
+    final batteryStatus = await permission_pack.Permission.ignoreBatteryOptimizations.status;
     //Activity Recognition Permission
     if (!activityRecognitionStatus.isGranted) {
       final activityRecognitionRequest = await permission_pack.Permission.activityRecognition.request();
@@ -80,13 +158,43 @@ class _HomeState extends State<Home> {
         );
       }
     }
+    //Notification Permission
+    if (!notificationStatus.isGranted) {
+      final notificationRequest = await permission_pack.Permission.notification.request();
+      if (notificationRequest.isDenied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.notificationDenied),
+          ),
+        );
+      }
+    }
+    //Ignore Battery Optimizations
+    if (!batteryStatus.isGranted) {
+      final batteryRequest = await permission_pack.Permission.ignoreBatteryOptimizations.request();
+      if (batteryRequest.isDenied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.batteryDenied),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _startBackgroundService() async {
+    initializeBackgroundService();
+    FlutterBackgroundService().invoke(BackgroundTitle.foregroundService);
+  }
+
+  Future<void> _stopBackgroundService() async {
+    FlutterBackgroundService().invoke(BackgroundTitle.stopService);
   }
 
   void _loadCurrentUser() {
     setState(() {
       _currentUser = FirebaseAuth.instance.currentUser;
       _loadUserData();
-      _loadLimitData();
     });
   }
 
@@ -96,13 +204,35 @@ class _HomeState extends State<Home> {
       setState(() {
         _currentUserData = userData;
         currentUserWeight = userData?['weight']?.toString() ?? '0';
+        currentUserHeight = userData?['height']?.toString() ?? '0';
       });
     }
   }
 
-  Future<void> _loadLimitData() async {
+  Future<void> _saveLimitDataToDatabase(String limitStepsValue, String limitCaloriesValue) async {
+    await _dbHelper.saveLimit(limitStepsValue, limitCaloriesValue);
+  }
+
+  Future<void> _saveLimitDataToFirestore(String limitStepsValue, String limitCaloriesValue) async {
+    if(_currentUser != null) {
+      await _dataService.saveLimitData(
+          context, _currentUser!.uid,
+          int.tryParse(limitStepsValue) ?? 0,
+          double.tryParse(limitCaloriesValue) ?? 0.0
+      );
+    }
+  }
+
+  Future<void> _loadLimitDataFromDatabase() async {
+    Map<String, String>? limits = await _dbHelper.loadLimit();
+    currentLimitSteps = limits?['currentLimitSteps'] ?? '0';
+    currentLimitCalories = limits?['currentLimitCalories'] ?? '0';
+  }
+
+  Future<void> _loadLimitDataFromFirestore() async {
     if (_currentUser != null) {
-      var limitData = await _dataService.loadLimitData(context, _currentUser!.uid);
+      var limitData = await _dataService.loadLimitData(
+          context, _currentUser!.uid);
       setState(() {
         _currentLimitData = limitData;
         currentLimitSteps = limitData?['limitSteps']?.toString() ?? '0';
@@ -111,54 +241,80 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Future<void> _signOut() async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Center(
-          child: SpinKitThreeBounce(
-            color: Colors.black,
-            size: 30.0,
-          ),
-        );
-      },
-    );
-
-    await _authService.signOut(context);
-    Navigator.pop(context);
-    Navigator.pushReplacementNamed(context, Routes.login);
-  }
+  // Future<void> _loadDailyDataFromFirestore() async {
+  //   if (_currentUser != null) {
+  //     var dailyData = await _dataService.loadDailyData(
+  //         context, _currentUser!.uid);
+  //     setState(() {
+  //       _startSteps = dailyData?['startSteps'] ?? 0;
+  //     });
+  //   }
+  // }
 
   double dailyStepsProgress () {
-    if(int.parse(currentLimitSteps) >= _currentSteps) {
-      return _currentSteps / int.parse(currentLimitSteps);
+    if(int.parse(currentLimitSteps) >= _todaySteps && int.parse(currentLimitSteps) > 0) {
+      return _todaySteps / int.parse(currentLimitSteps);
+    } else if (_todaySteps == 0 || int.parse(currentLimitSteps) == 0) {
+      return 0;
     } else {
       return 1;
     }
   }
 
   double dailyCaloriesProgress () {
-    if(double.parse(currentLimitCalories) >= _currentCalories) {
-      return _currentCalories / double.parse(currentLimitCalories);
+    if(double.parse(currentLimitCalories) >= _todayCalories && double.parse(currentLimitCalories) > 0) {
+      return _todayCalories / double.parse(currentLimitCalories);
+    } else if (_todayCalories == 0 || double.parse(currentLimitCalories) == 0) {
+      return 0;
     } else {
       return 1;
     }
   }
 
-  void initPedometer() {
-    _dailyStepsCountStream = Pedometer.stepCountStream;
-    _dailyStepsCountStream.listen(onStepCount).onError(onStepCountError);
-  }
-
-  void onStepCount(StepCount event) {
-    setState(() {
-      _currentSteps = event.steps;
+  void startPedometer() {
+    dailyStepsCountStream = Pedometer.stepCountStream.listen((StepCount event) {
+      if(_startSteps >= event.steps){
+        _startSteps = 0;
+      }
+      if(_startSteps == 0) {
+        _startSteps = event.steps;
+        //save _startSteps
+        _saveDailyDataToDatabase();
+        _saveDailyDataToFirestore();
+      }
+      setState(() {
+        _todaySteps = event.steps - _startSteps;
+        _todayCalories = _calculateDailyCalories();
+      });
     });
   }
 
-  void onStepCountError(error) {
-    print('$error');
+  void stopPedometer() {
+    dailyStepsCountStream.cancel();
+  }
+
+  void _onPressedCount() {
+    if (isStarting) {
+      stopPedometer();
+      //save _todaySteps, _todayCalories
+      _saveDailyDataToDatabase();
+      _saveDailyDataToFirestore();
+      //stop background
+      _stopBackgroundService();
+    }
+    else {
+      startPedometer();
+      _startBackgroundService();
+    }
+    setState(() {
+      isStarting = !isStarting;
+    });
+  }
+
+  double _calculateDailyCalories() {
+    double weight = double.parse(currentUserWeight);
+    double stepLength = (double.parse(currentUserHeight) * 0.415) / 100;
+    return _todaySteps * (weight / stepLength) * 0.57;
   }
 
   void _showOptions(BuildContext context) {
@@ -176,6 +332,11 @@ class _HomeState extends State<Home> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
+                    stopPedometer();
+                    _stopBackgroundService();
+                    setState(() {
+                      isStarting = !isStarting;
+                    });
                     Navigator.pushNamed(
                       context,
                       Routes.running,
@@ -241,6 +402,11 @@ class _HomeState extends State<Home> {
                               onPressed: () {
                                 Navigator.pop(context);
                                 Navigator.pop(context);
+                                stopPedometer();
+                                _stopBackgroundService();
+                                setState(() {
+                                  isStarting = !isStarting;
+                                });
                                 Navigator.pushNamed(
                                   context,
                                   Routes.running,
@@ -320,13 +486,10 @@ class _HomeState extends State<Home> {
               children: [
                 IconButton(
                   onPressed: () {
-                    if (_networkService.connectionStatus) {
-                      _signOut();
-                    } else {
-                      _showInternetStatus(context);
-                    }
+                    _stopBackgroundService();
+                    SystemNavigator.pop();
                   },
-                  icon: Icon(Icons.logout_outlined, color: Colors.grey[800]),
+                  icon: Icon(Icons.power_settings_new_rounded, color: Colors.grey[800]),
                 ),
                 SizedBox(width: 12),
               ],
@@ -355,9 +518,9 @@ class _HomeState extends State<Home> {
                     children: [
                       Column(
                         children: [
-                          _buildDailyCard(AppLocalizations.of(context)!.stepsTitle ,'10000', Icons.directions_walk, Colors.greenAccent, dailyStepsProgress()),
+                          _buildDailyCard(AppLocalizations.of(context)!.stepsTitle, _todaySteps.toString(), isStarting ? Icons.pause : Icons.play_arrow, Colors.greenAccent, dailyStepsProgress(), _onPressedCount),
                           SizedBox(height: 5),
-                          _buildDailyCard(AppLocalizations.of(context)!.caloriesTitle ,'10000', Icons.local_fire_department_rounded, Colors.redAccent, dailyCaloriesProgress()),
+                          _buildDailyCard(AppLocalizations.of(context)!.caloriesTitle, _todayCalories.round().toString(), Icons.local_fire_department_rounded, Colors.redAccent, dailyCaloriesProgress(), null),
                         ],
                       ),
                       _buildProgressCard(),
@@ -396,7 +559,6 @@ class _HomeState extends State<Home> {
               ),
               IconButton(
                 onPressed: () {
-                  //
                 },
                 icon: Icon(Icons.group_outlined, color: Colors.grey[800], size: 30),
               ),
@@ -479,19 +641,19 @@ class _HomeState extends State<Home> {
               },
               child: Text(
                 AppLocalizations.of(context)!.cancelButton,
-                style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font),
               ),
             ),
             TextButton(
               onPressed: () async {
                 // Update limit data
                 if (_currentUser != null) {
-                  await _dataService.saveLimitData(
-                      context, _currentUser!.uid,
-                      int.tryParse(limitStepsValue ?? '0') ?? 0,
-                      double.tryParse(limitCaloriesValue ?? '0.0') ?? 0.0
-                  );
-                  _loadLimitData();
+                  _saveLimitDataToDatabase(limitStepsValue!, limitCaloriesValue!);
+                  _loadLimitDataFromDatabase();
+                  if(_networkService.connectionStatus) {
+                    _saveLimitDataToFirestore(limitStepsValue!, limitCaloriesValue!);
+                    _loadLimitDataFromFirestore();
+                  }
                 }
                 Navigator.pop(context);
               },
@@ -506,7 +668,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildDailyCard(String title, String dailySteps, IconData iconData, Color colorData, double dailyProgress) {
+  Widget _buildDailyCard(String title, String dailySteps, IconData iconData, Color colorData, double dailyProgress, VoidCallback? onTap) {
     return GestureDetector(
       onTap: _onDailyCardPressed,
       child: Container(
@@ -538,15 +700,18 @@ class _HomeState extends State<Home> {
                       dailySteps,
                       style: TextStyle(fontSize: 28.0, color: Colors.white, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                     ),
-                    CircularPercentIndicator(
-                      radius: 20,
-                      lineWidth: 5,
-                      animation: true,
-                      percent: dailyProgress,
-                      center: Icon(iconData, color: colorData, size: 15),
-                      circularStrokeCap: CircularStrokeCap.round,
-                      progressColor: colorData,
-                      backgroundColor: Colors.grey.shade800,
+                    GestureDetector(
+                      onTap: onTap,
+                      child: CircularPercentIndicator(
+                        radius: 20,
+                        lineWidth: 5,
+                        animation: false,
+                        percent: dailyProgress,
+                        center: Icon(iconData, color: colorData, size: 15),
+                        circularStrokeCap: CircularStrokeCap.round,
+                        progressColor: colorData,
+                        backgroundColor: Colors.grey.shade800,
+                      ),
                     ),
                   ],
                 ),
@@ -561,7 +726,7 @@ class _HomeState extends State<Home> {
   Widget _buildHistoryChartCard() {
     return Container(
       width: MediaQuery.of(context).size.width * 1,
-      height: 297,
+      height: 317,
       child: Card(
         color: Colors.grey[850],
         elevation: 0,

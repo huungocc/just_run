@@ -1,4 +1,5 @@
 {
+  "appName": "JustRun",
   "reportCardTitle": "Report",
   "resultCardTitle": "Result",
   "runningCardTitle": "Running",
@@ -24,7 +25,7 @@
   "totalTimeTitle": "Total time",
   "stepsTitle": "Steps",
   "caloriesTitle": "Calories",
-  "speedTitle": "Speed (km/h)",
+  "paceTitle": "Pace (min/km)",
 
   "offlineModeTitle": "Offline Mode",
   "changeInformationTitle": "Change Information",
@@ -50,6 +51,8 @@
   "deleteDataFailed": "Failed to delete",
   "activityRecognitionDenied": "Activity Recognition Denied",
   "locationDenied": "Location Denied",
+  "notificationDenied": "Notification Denied",
+  "batteryDenied": "Ignore Battery Optimizations Denied",
   "shareDismissed": "Share dismissed",
   "shareSuccessfully": "Screenshot shared successfully!",
   "screenShotSaved": "Screenshot saved!",

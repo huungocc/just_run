@@ -79,6 +79,99 @@ class DataService {
     }
   }
 
+  Future<void> saveDailyData(BuildContext context, String userId, String dateKey, int dailySteps, int startSteps, double dailyCalories) async {
+    try {
+      await _db.collection('users').doc(userId).collection('daily').doc(dateKey).set({
+        'dateKey': dateKey,
+        'dailySteps': dailySteps,
+        'startSteps': startSteps,
+        'dailyCalories': dailyCalories,
+      });
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.saveDataFailed + ': $e'),
+        ),
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>?> loadDailyData(BuildContext context, String userId) async {
+    try {
+      var doc = await _db.collection('users').doc(userId).collection('daily').doc('dateKey').get();
+      if (doc.exists) {
+        return doc.data();
+      } else {
+        print(AppLocalizations.of(context)!.userDataFailed + ' $userId');
+        return null;
+      }
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.loadDataFailed + ': $e'),
+        ),
+      );
+      return null;
+    }
+  }
+
+  Future<String?> loadLatestDate(BuildContext context, String userId) async {
+    try {
+      var snapshot = await _db
+          .collection('users')
+          .doc(userId)
+          .collection('daily')
+          .orderBy('dateKey', descending: true)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        var doc = snapshot.docs.first;
+        return doc['dateKey'] as String?;
+      } else {
+        print(AppLocalizations.of(context)!.userDataFailed + ' $userId');
+        return null;
+      }
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.loadDataFailed + ': $e'),
+        ),
+      );
+      return null;
+    }
+  }
+
+  Future<int?> loadStartSteps(BuildContext context, String userId, String dateKey) async {
+    try {
+      var doc = await _db
+          .collection('users')
+          .doc(userId)
+          .collection('daily')
+          .doc(dateKey)
+          .get();
+
+      if (doc.exists) {
+        return doc['startSteps'] as int?;
+      } else {
+        print(AppLocalizations.of(context)!.userDataFailed + ' $userId');
+        return null;
+      }
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.loadDataFailed + ': $e'),
+        ),
+      );
+      return null;
+    }
+  }
+
+
   Future<void> saveRunningData(BuildContext context, String userId, String dateTime, double totalDistance, Duration totalTime, int totalSteps, double totalCalories, Set<Polyline> polylines) async {
     try {
       List<Map<String, dynamic>> polylineList = polylines.map((polyline) {

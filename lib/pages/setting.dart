@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:just_run/manager/fonts.dart';
 import 'package:just_run/manager/locale_provider.dart';
+import 'package:just_run/manager/routes.dart';
+import 'package:just_run/services/auth_service.dart';
 import 'package:just_run/services/data_service.dart';
 import 'package:just_run/services/network_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,6 +19,7 @@ class Setting extends StatefulWidget {
 }
 
 class _SettingState extends State<Setting> {
+  final AuthService _authService = AuthService();
   final DataService _dataService = DataService();
   final NetworkService _networkService = NetworkService();
 
@@ -47,6 +51,25 @@ class _SettingState extends State<Setting> {
       _currentUser = FirebaseAuth.instance.currentUser;
       _loadUserData();
     });
+  }
+
+  Future<void> _signOut() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Center(
+          child: SpinKitThreeBounce(
+            color: Colors.black,
+            size: 30.0,
+          ),
+        );
+      },
+    );
+
+    await _authService.signOut(context);
+    Navigator.pop(context);
+    Navigator.pushReplacementNamed(context, Routes.login);
   }
 
   Future<void> _loadUserData() async {
@@ -83,6 +106,23 @@ class _SettingState extends State<Setting> {
             AppLocalizations.of(context)!.settingCardTitle,
             style: TextStyle(color: Colors.black, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
           ),
+          actions: [
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    if (_networkService.connectionStatus) {
+                      _signOut();
+                    } else {
+                      _showInternetStatus(context);
+                    }
+                  },
+                  icon: Icon(Icons.logout_outlined, color: Colors.black),
+                ),
+                SizedBox(width: 12),
+              ],
+            ),
+          ],
           centerTitle: true,
         ),
       ),
