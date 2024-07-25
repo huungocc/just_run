@@ -1,4 +1,5 @@
 {
+  "appName": "JustRun",
   "reportCardTitle": "Thống kê",
   "resultCardTitle": "Kết quả",
   "runningCardTitle": "Chạy bộ",
@@ -24,7 +25,7 @@
   "totalTimeTitle": "Tổng thời gian",
   "stepsTitle": "Bước chân",
   "caloriesTitle": "Calo tiêu thụ",
-  "speedTitle": "Tốc độ (km/h)",
+  "paceTitle": "Nhịp độ (phút/km)",
 
   "offlineModeTitle": "Ngoại tuyến",
   "changeInformationTitle": "Thông tin",
@@ -50,17 +51,11 @@
   "deleteDataFailed": "Không thể xóa dữ liệu",
   "activityRecognitionDenied": "Quyền Hoạt Động Thể Chất bị từ chối",
   "locationDenied": "Quyền Vị Trí bị từ chối",
+  "notificationDenied": "Quyền Thông Báo bị từ chối",
+  "batteryDenied": "Quyền Chạy Trong Nền bị từ chối",
   "shareDismissed": "Đã hủy chia sẻ",
   "shareSuccessfully": "Chia sẻ thành công!",
   "screenShotSaved": "Đã lưu ảnh chụp màn hình!",
-
-  "monday": "T2",
-  "tuesday": "T3",
-  "wednesday": "T4",
-  "thursday": "T5",
-  "friday": "T6",
-  "saturday": "T7",
-  "sunday": "CN",
 
   "stepsChart": "Bước chân - 7 ngày gần đây",
   "caloChart": "Calo tiêu thụ - 7 ngày gần đây"

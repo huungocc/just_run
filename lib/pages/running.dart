@@ -54,7 +54,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
 
   List<LocationWithTime> locationList = [];
   double _totalDistance = 0.0;
-  double _currentSpeed = 0.0;
+  double _currentPace = 0.0;
 
   Completer<GoogleMapController> _controller = Completer();
   Set<Polyline> _polylines = {};
@@ -236,7 +236,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     if (isStarting) {
       stopTimer();
       stopCountingSteps();
-      _currentSpeed = 0;
+      _currentPace = 0;
     } else {
       startTimer();
       startCountingSteps();
@@ -270,7 +270,6 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     _subscription = Pedometer.stepCountStream.listen((StepCount event) {
       if(_lastSteps == 0){
         _lastSteps = event.steps;
-        print(event.steps);
       }
       setState(() {
         _currentSteps = event.steps - _lastSteps;
@@ -291,7 +290,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
 
         if (locationList.length >= 2) {
           _calculateDistance();
-          _calculateSpeed();
+          _calculatePace();
           _updatePolyline();
         }
       });
@@ -334,16 +333,16 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
     return distanceInKm;
   }
 
-  void _calculateSpeed() {
+  void _calculatePace() {
     if (locationList.length >= 2) {
       LocationWithTime lastLocation = locationList[locationList.length - 2];
       LocationWithTime currentLocation = locationList.last;
       double distanceInKm = _calculateDistanceBetween(lastLocation.location, currentLocation.location);
       double timeInSeconds = currentLocation.time.difference(lastLocation.time).inSeconds.toDouble();
 
-      if (isStarting && timeInSeconds > 0) {
-        double timeInHours = timeInSeconds / 3600.0;
-        _currentSpeed = distanceInKm / timeInHours;
+      if (isStarting && timeInSeconds > 0 && distanceInKm > 0) {
+        double timeInMinutes = timeInSeconds / 60.0;
+        _currentPace = timeInMinutes / distanceInKm;
       }
     }
   }
@@ -573,7 +572,7 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: _buildInformationCard(_currentSpeed.toStringAsFixed(1), AppLocalizations.of(context)!.speedTitle)),
+                      Expanded(child: _buildInformationCard(_currentPace.toStringAsFixed(1), AppLocalizations.of(context)!.paceTitle)),
                       SizedBox(width: 16),
                       Expanded(child: _buildInformationCard(_currentSteps.toString(), AppLocalizations.of(context)!.stepsTitle)),
                     ],
