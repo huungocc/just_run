@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:just_run/manager/fonts.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
+
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:just_run/services/result_arguments.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class Result extends StatefulWidget {
   @override
@@ -13,26 +19,72 @@ class Result extends StatefulWidget {
 
 class _ResultState extends State<Result> {
   final ScreenshotController screenshotController = ScreenshotController();
+  late ResultArguments result;
+  late GoogleMapController mapController;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      setState(() {
+        result = ModalRoute.of(context)!.settings.arguments as ResultArguments;
+      });
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    DateTime time = DateTime(0).add(duration);
+    return DateFormat('HH:mm:ss').format(time);
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+    if (result?.polylines.isNotEmpty ?? false) {
+      final bounds = _getBounds(result!.polylines);
+      mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+    }
+  }
+
+  LatLngBounds _getBounds(Set<Polyline> polylines) {
+    double? x0, x1, y0, y1;
+    for (Polyline polyline in polylines) {
+      for (LatLng point in polyline.points) {
+        if (x0 == null) {
+          x0 = x1 = point.latitude;
+          y0 = y1 = point.longitude;
+        } else {
+          if (point.latitude > x1!) x1 = point.latitude;
+          if (point.latitude < x0) x0 = point.latitude;
+          if (point.longitude > y1!) y1 = point.longitude;
+          if (point.longitude < y0!) y0 = point.longitude;
+        }
+      }
+    }
+    return LatLngBounds(
+      southwest: LatLng(x0!, y0!),
+      northeast: LatLng(x1!, y1!),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Screenshot(
       controller: screenshotController,
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(70.0),
           child: AppBar(
             backgroundColor: Colors.white,
             title: Text(
-              'Result',
-              style: TextStyle(color: Colors.black, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+              AppLocalizations.of(context)!.resultCardTitle,
+              style: TextStyle(color: Colors.black, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
             ),
             actions: [
               Row(
                 children: [
                   IconButton(
-                    onPressed: _captureScreenshot,
-                    icon: Icon(Icons.camera_alt_outlined, color: Colors.black),
+                    onPressed: _captureShare,
+                    icon: Icon(Icons.reply, color: Colors.black),
                   ),
                   SizedBox(width: 8)
                 ],
@@ -44,25 +96,48 @@ class _ResultState extends State<Result> {
         body: Container(
           width: double.infinity,
           height: double.infinity,
+          color: Colors.white,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 0, 4, 16),
+                  padding: const EdgeInsets.fromLTRB(5, 0, 5, 8),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16.0),
-                    child: Image.asset('assets/map_1.jpg'),
+                    borderRadius: BorderRadius.circular(20.0),
+                    child: Container(
+                      height: 255,
+                      child: GoogleMap(
+                        myLocationEnabled: false,
+                        myLocationButtonEnabled: false,
+                        zoomControlsEnabled: false,
+                        onMapCreated: _onMapCreated,
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(21.0278, 105.8342),
+                          zoom: 15.0,
+                        ),
+                        polylines: Set<Polyline>.from(
+                          result?.polylines.map((polyline) => Polyline(
+                            polylineId: PolylineId('polyline_id'),
+                            points: polyline.points,
+                            color: Colors.redAccent,
+                            width: 3,
+                          )) ?? {},
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                Column(
-                  children: [
-                    _buildInformationCard('Date', '20/06/2024'),
-                    _buildInformationCard('Distance (km)', '4.12'),
-                    _buildInformationCard('Total time', '00:20:00'),
-                    _buildInformationCard('Steps', '200'),
-                    _buildInformationCard('Calories (kcal)', '100'),
-                  ],
+                Expanded(
+                  child: Column(
+                    children: [
+                      _buildInformationCard(AppLocalizations.of(context)!.dateTitle, result.dateTime),
+                      _buildInformationCard(AppLocalizations.of(context)!.distanceTitle, result.totalDistance.toStringAsFixed(1)),
+                      _buildInformationCard(AppLocalizations.of(context)!.totalTimeTitle, _formatDuration(result.totalTime)),
+                      _buildInformationCard(AppLocalizations.of(context)!.stepsTitle, result.totalSteps.toString()),
+                      _buildInformationCard(AppLocalizations.of(context)!.caloriesTitle, result.totalCalories.toStringAsFixed(0)),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -76,9 +151,13 @@ class _ResultState extends State<Result> {
     return GestureDetector(
       child: Container(
         width: double.infinity,
-        height: 75.0,
+        height: 74.0,
         margin: EdgeInsets.symmetric(vertical: 5.0),
         child: Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
           color: Colors.grey[300],
           child: Padding(
             padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -88,11 +167,11 @@ class _ResultState extends State<Result> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 20.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold),
                 ),
                 Text(
                   description,
-                  style: TextStyle(fontFamily: 'Blinker', fontSize: 20, fontWeight: FontWeight.bold,),
+                  style: TextStyle(fontFamily: Fonts.display_font, fontSize: 18, fontWeight: FontWeight.bold,),
                 ),
               ],
             ),
@@ -102,7 +181,7 @@ class _ResultState extends State<Result> {
     );
   }
 
-  Future<void> _captureScreenshot() async {
+  Future<void> _captureShare() async {
     var status = await Permission.storage.status;
     if (!status.isGranted) {
       await Permission.storage.request();
@@ -120,7 +199,15 @@ class _ResultState extends State<Result> {
     if (image != null) {
       File imgFile = File(filePath);
       await imgFile.writeAsBytes(image);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Screenshot saved!', style: TextStyle(fontSize: 15.0, fontFamily: 'Blinker'))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.screenShotSaved, style: TextStyle(fontSize: 15.0, fontFamily: Fonts.display_font))));
+    }
+
+    final result = await Share.shareXFiles([XFile(filePath)]);
+
+    if (result.status == ShareResultStatus.success) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.shareSuccessfully, style: TextStyle(fontSize: 15.0, fontFamily: Fonts.display_font))));
+    } else if (result.status == ShareResultStatus.dismissed) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.shareDismissed, style: TextStyle(fontSize: 15.0, fontFamily: Fonts.display_font))));
     }
   }
 }

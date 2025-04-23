@@ -1,7 +1,29 @@
+import 'dart:async';
+import 'dart:math';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/animation.dart';
+import 'package:http/http.dart' as http;
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
+import 'package:intl/intl.dart';
+import 'package:just_run/manager/fonts.dart';
+import 'package:just_run/services/data_service.dart';
+import 'package:location/location.dart' as location_pack;
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+
+import 'package:just_run/manager/routes.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:pedometer/pedometer.dart';
+import 'package:just_run/services/location_list.dart';
+
+import '../services/user_arguments.dart';
+import 'package:just_run/services/result_arguments.dart';
+import 'package:just_run/manager/marker_title.dart';
+
+import 'package:vibration/vibration.dart';
 
 class Running extends StatefulWidget {
   @override
@@ -9,156 +31,486 @@ class Running extends StatefulWidget {
 }
 
 class _RunningState extends State<Running> with TickerProviderStateMixin {
+  User? _currentUser;
+
   late AnimationController controller;
+
   bool isStarting = false;
+  bool isLockOn = false;
 
-  Location location = Location();
+  location_pack.Location location = location_pack.Location();
   LatLng? currentLocation;
+  Marker? currentMarker;
   late GoogleMapController mapController;
+  static const LatLng defaultLocation = LatLng(21.0278, 105.8342);
+  StreamSubscription<location_pack.LocationData>? locationSubscription;
 
-  static const LatLng defaultCenter = LatLng(21.0278, 105.8342);
+  Duration _totalTime = Duration.zero;
+  late Timer _timer;
+
+  int _currentSteps = 0;
+  int _lastSteps = 0;
+  late StreamSubscription<StepCount> _subscription;
+
+  List<LocationWithTime> locationList = [];
+  double _totalDistance = 0.0;
+  double _currentPace = 0.0;
+
+  Completer<GoogleMapController> _controller = Completer();
+  Set<Polyline> _polylines = {};
+  Set<Marker> _markers = {};
+  String user_marker = 'user_marker';
+
+  late double _currentUserWeight;
+  double _currentCalories = 0.0;
+
+  late double limit;
 
   @override
   void initState() {
     super.initState();
 
-    controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..addListener(() {
-      setState(() {});
+    _loadCurrentUser();
+
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)!.settings.arguments;
+      if (args is RunningArguments) {
+        setState(() {
+          _currentUserWeight = args.weight.toDouble();
+          limit = double.tryParse(args.limit) ?? 0.0;
+        });
+      }
     });
 
+    _timer = Timer(Duration.zero, () {});
+
+    checkLocationServiceEnabled();
+  }
+
+  void _loadCurrentUser() {
+    setState(() {
+      _currentUser = FirebaseAuth.instance.currentUser;
+    });
+  }
+
+  void _updateUserMarker() async {
+    Marker userMarker = await createMarkerWithCustomIcon(
+      _currentUser!.photoURL!,
+      currentLocation!,
+      MarkerTitle.user_marker,
+          () {},
+    );
+
+    setState(() {
+      _markers.removeWhere((marker) => marker.markerId.value == MarkerTitle.user_marker);
+      _markers.add(userMarker);
+    });
+  }
+
+  Future<Marker> createMarkerWithCustomIcon(String imageUrl, LatLng position, String markerTitle, Function()? onTap) async {
+    final BitmapDescriptor customIcon = await getMarkerIcon(imageUrl, Size(80, 80));
+
+    final Marker marker = Marker(
+      markerId: MarkerId(markerTitle),
+      position: position,
+      icon: customIcon,
+      onTap: onTap,
+      anchor: Offset(0.5, 0.5),
+    );
+
+    return marker;
+  }
+
+  Future<BitmapDescriptor> getMarkerIcon(String imageUrl, Size size) async {
+    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    final Radius radius = Radius.circular(size.width / 2);
+    final Paint shadowPaint = Paint()..color = Colors.white.withAlpha(100);
+    final double shadowWidth = 15.0;
+    final Paint borderPaint = Paint()..color = Colors.white;
+    final double borderWidth = 3.0;
+    final double imageOffset = shadowWidth + borderWidth;
+
+    // Shadow circle
+    canvas.drawRRect(
+        RRect.fromRectAndCorners(
+          Rect.fromLTWH(0.0, 0.0, size.width, size.height),
+          topLeft: radius,
+          topRight: radius,
+          bottomLeft: radius,
+          bottomRight: radius,
+        ),
+        shadowPaint);
+
+    // Border circle
+    canvas.drawRRect(
+        RRect.fromRectAndCorners(
+          Rect.fromLTWH(shadowWidth, shadowWidth, size.width - (shadowWidth * 2),
+              size.height - (shadowWidth * 2)),
+          topLeft: radius,
+          topRight: radius,
+          bottomLeft: radius,
+          bottomRight: radius,
+        ),
+        borderPaint);
+
+    // Oval for the image
+    Rect oval = Rect.fromLTWH(imageOffset, imageOffset,
+        size.width - (imageOffset * 2), size.height - (imageOffset * 2));
+
+    // Clip oval path for image
+    canvas.clipPath(Path()..addOval(oval));
+
+    // Fetch and draw the network image
+    ui.Image image = await _fetchNetworkImage(imageUrl);
+    paintImage(canvas: canvas, image: image, rect: oval, fit: BoxFit.cover);
+
+    // Convert canvas to image
+    final ui.Image markerAsImage = await pictureRecorder
+        .endRecording()
+        .toImage(size.width.toInt(), size.height.toInt());
+
+    // Convert image to bytes
+    final ByteData? byteData = await markerAsImage.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List uint8List = byteData!.buffer.asUint8List();
+
+    return BitmapDescriptor.fromBytes(uint8List);
+  }
+
+  Future<ui.Image> _fetchNetworkImage(String imageUrl) async {
+    final http.Response response = await http.get(Uri.parse(imageUrl));
+    final Uint8List imageBytes = response.bodyBytes;
+    final ui.Codec codec = await ui.instantiateImageCodec(imageBytes);
+    final ui.FrameInfo fi = await codec.getNextFrame();
+    return fi.image;
+  }
+
+  Future<void> checkLocationServiceEnabled() async {
+    currentLocation = defaultLocation;
+    bool serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+    }
     _getCurrentLocation();
   }
 
   Future<void> _getCurrentLocation() async {
-    bool _serviceEnabled;
-    PermissionStatus _permissionGranted;
-
-    _serviceEnabled = await location.serviceEnabled();
-    if (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-      if (!_serviceEnabled) {
-        _handleNoLocationService();
-        return;
-      }
-    }
-
-    _permissionGranted = await location.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await location.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
-        _handleNoLocationPermission();
-        return;
-      }
-    }
-
-    LocationData _locationData = await location.getLocation();
+    location_pack.LocationData _locationData = await location!.getLocation();
     setState(() {
       currentLocation = LatLng(_locationData.latitude!, _locationData.longitude!);
+      _updateCameraPosition();
+      _updateUserMarker();
+    });
+
+    locationSubscription = location!.onLocationChanged.listen((location_pack.LocationData newLocation) {
+      setState(() {
+        currentLocation = LatLng(newLocation.latitude!, newLocation.longitude!);
+        _updateCameraPosition();
+        _updateUserMarker();
+      });
     });
   }
 
-  void _handleNoLocationService() {
-    // Xử lý khi không có dịch vụ định vị
-    setState(() {
-      currentLocation = defaultCenter;
-    });
-  }
-
-  void _handleNoLocationPermission() {
-    // Xử lý khi không có quyền truy cập định vị
-    setState(() {
-      currentLocation = defaultCenter;
-    });
+  void _updateCameraPosition() {
+    if (mapController != null && currentLocation != null) {
+      mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(currentLocation!.latitude!, currentLocation!.longitude!),
+            zoom: 15,
+          ),
+        ),
+      );
+    }
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    locationSubscription?.cancel();
+    _timer.cancel();
+    stopCountingSteps();
     super.dispose();
   }
 
-  void _toggleAnimation() {
+  void _onPressedCount() {
+    if (isStarting) {
+      stopTimer();
+      stopCountingSteps();
+      _currentPace = 0;
+    } else {
+      startTimer();
+      startCountingSteps();
+      startTracking();
+    }
     setState(() {
-      if (isStarting) {
-        controller.stop();
-      } else {
-        controller.repeat();
-      }
       isStarting = !isStarting;
     });
   }
 
-  Future <bool> _onBackPressed() {
+  void startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        _totalTime = _totalTime + Duration(seconds: 1);
+      });
+    });
+  }
+
+  void stopTimer() {
+    setState(() {
+      _timer.cancel();
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    DateTime time = DateTime(0).add(duration);
+    return DateFormat('HH:mm:ss').format(time);
+  }
+
+  void startCountingSteps() {
+    _subscription = Pedometer.stepCountStream.listen((StepCount event) {
+      if(_lastSteps == 0){
+        _lastSteps = event.steps;
+      }
+      setState(() {
+        _currentSteps = event.steps - _lastSteps;
+      });
+    });
+  }
+
+  void stopCountingSteps() {
+    _subscription.cancel();
+  }
+
+  void startTracking() {
+    location.onLocationChanged.listen((location_pack.LocationData locationData) {
+      setState(() {
+        LatLng currentLocation = LatLng(locationData.latitude!, locationData.longitude!);
+        DateTime currentTime = DateTime.now();
+        locationList.add(LocationWithTime(currentLocation, currentTime));
+
+        if (locationList.length >= 2) {
+          _calculateDistance();
+          _calculatePace();
+          _updatePolyline();
+        }
+      });
+    });
+  }
+
+  void _calculateDistance() {
+    if (locationList.length >= 2) {
+      LocationWithTime lastLocation = locationList[locationList.length - 2];
+      LocationWithTime currentLocation = locationList.last;
+      double distanceInKm = _calculateDistanceBetween(lastLocation.location, currentLocation.location);
+
+      if (isStarting) {
+        _totalDistance += distanceInKm;
+        if (_totalDistance >= limit && limit > 0) {
+          setState(() {
+            limit = 0;
+            _onPressedCount();
+            _onReachLimit();
+          });
+        }
+      }
+    }
+  }
+
+  double _calculateDistanceBetween(LatLng start, LatLng end) {
+    //su dung cong thuc Haversine
+    const EARTH_RADIUS = 6371000.0;
+    double lat1 = start.latitude * (pi / 180);
+    double lon1 = start.longitude * (pi / 180);
+    double lat2 = end.latitude * (pi / 180);
+    double lon2 = end.longitude * (pi / 180);
+    double dLat = lat2 - lat1;
+    double dLon = lon2 - lon1;
+    double a = (sin(dLat / 2) * sin(dLat / 2)) + (cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2));
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double distance = EARTH_RADIUS * c;
+    // m -> km
+    double distanceInKm = distance / 1000.0;
+    return distanceInKm;
+  }
+
+  void _calculatePace() {
+    if (locationList.length >= 2) {
+      LocationWithTime lastLocation = locationList[locationList.length - 2];
+      LocationWithTime currentLocation = locationList.last;
+      double distanceInKm = _calculateDistanceBetween(lastLocation.location, currentLocation.location);
+      double timeInSeconds = currentLocation.time.difference(lastLocation.time).inSeconds.toDouble();
+
+      if (isStarting && timeInSeconds > 0 && distanceInKm > 0) {
+        double timeInMinutes = timeInSeconds / 60.0;
+        _currentPace = timeInMinutes / distanceInKm;
+      }
+    }
+  }
+
+  void _updatePolyline() {
+    List<LatLng> polylinePoints = locationList.map((loc) => loc.location).toList();
+    Polyline polyline = Polyline(
+      polylineId: PolylineId('tracking_polyline_${_polylines.length}'),
+      color: isStarting ? Colors.redAccent : Colors.blueAccent,
+      width: 3,
+      points: polylinePoints,
+    );
+
+    Marker startMarker = Marker(
+      markerId: MarkerId('start_marker_${_polylines.length}'),
+      position: polylinePoints.first,
+      infoWindow: InfoWindow(title: MarkerTitle.start_marker),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+    );
+
+    setState(() {
+      _polylines.add(polyline);
+      _markers.add(startMarker);
+    });
+  }
+
+  double _getMet(double averageSpeed) {
+    if (averageSpeed >= 17.5) {
+      return 16.0;
+    } else if (averageSpeed >= 16.1) {
+      return 14.5;
+    } else if (averageSpeed >= 13.8) {
+      return 12.8;
+    } else if (averageSpeed >= 12.1) {
+      return 11.8;
+    } else if (averageSpeed >= 11.3) {
+      return 11.0;
+    } else if (averageSpeed >= 9.7) {
+      return 9.8;
+    } else {
+      return 8.3; // gia tri MET mac dinh
+    }
+  }
+
+  void _calculateCalories() {
+    double averageSpeed = _calculateAverageSpeed();
+    double met = _getMet(averageSpeed);
+    double durationInHours = _totalTime.inSeconds / 3600.0;
+    _currentCalories = met * _currentUserWeight * durationInHours;
+    print(_currentCalories);
+  }
+
+  double _calculateAverageSpeed() {
+    double _totalTimeInHours = _totalTime.inSeconds / 3600.0;
+    return _totalDistance / _totalTimeInHours;
+  }
+
+  double calculateProgress() {
+    if (limit > 0) {
+      return _totalDistance > 0 ? (_totalDistance / limit).clamp(0.0, 1.0) : 0.0;
+    } else {
+      return 0.0;
+    }
+  }
+
+  Future<bool> _onBackPressed() {
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
+          borderRadius: BorderRadius.circular(30.0),
         ),
-        title: Text('Exit without saving?', style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.exitTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
         actions: <Widget>[
           TextButton(
             onPressed: () {
               Navigator.pop(context, false);
             },
-            child: Text('Cancel', style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context, true);
             },
-            child: Text('Exit', style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.exitButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     ).then((value) => value ?? false);
   }
 
-  Future <void> _onStopPressed() {
+  Future<void> _onStopPressed() {
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
+          borderRadius: BorderRadius.circular(30.0),
         ),
-        title: Text('Stop running?', style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.stopTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
         actions: <Widget>[
           TextButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            child: Text('Cancel', style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.cancelButton, style: TextStyle(fontSize: 20.0, color: Colors.grey[850], fontFamily: Fonts.display_font)),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context, '/running');
-              Navigator.pushReplacementNamed(context, '/result');
+              Navigator.pop(context, Routes.running);
+              _calculateCalories();
+              Navigator.pushReplacementNamed(context, Routes.result, arguments: ResultArguments(dateTime: DateFormat('dd-MM-yyyy HH:mm').format(DateTime.now()), totalDistance: _totalDistance, totalTime: _totalTime, totalSteps: _currentSteps, totalCalories: _currentCalories, polylines: _polylines));
+              DataService().saveRunningData(
+                context,
+                _currentUser!.uid,
+                DateFormat('dd-MM-yyyy HH:mm').format(DateTime.now()),
+                _totalDistance,
+                _totalTime,
+                _currentSteps,
+                _currentCalories,
+                _polylines,
+              );
             },
-            child: Text('Stop', style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: 'Blinker', fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.stopButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     ).then((value) => value ?? false);
   }
 
+  Future<void> _onReachLimit() {
+    Vibration.vibrate(duration: 2000);
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30.0),
+        ),
+        title: Text(AppLocalizations.of(context)!.reachLimitTitle, style: TextStyle(fontSize: 22.0, color: Colors.grey[850], fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text(AppLocalizations.of(context)!.okButton, style: TextStyle(fontSize: 20.0, color: Colors.redAccent, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    double progress = calculateProgress();
+
     return WillPopScope(
       onWillPop: _onBackPressed,
       child: Scaffold(
+        backgroundColor: isLockOn ? Colors.black : Colors.white,
         resizeToAvoidBottomInset: false,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(70.0),
           child: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: isLockOn ? Colors.black : Colors.white,
             title: Text(
-              'Running',
+              AppLocalizations.of(context)!.runningCardTitle,
               style: TextStyle(
                 color: Colors.black,
-                fontFamily: 'Blinker',
+                fontFamily: Fonts.display_font,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -166,22 +518,41 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
           ),
         ),
         body: currentLocation == null
-            ? Center(child: SpinKitThreeBounce(color: Colors.black, size: 30.0))
-            : Column(
-          children: [
-            Container(
-              height: 300,
-              child: GoogleMap(
-                myLocationEnabled: true,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
-                initialCameraPosition: CameraPosition(target: currentLocation!, zoom: 15),
-                onMapCreated: (GoogleMapController controller) {
-                  mapController = controller;
-                  mapController.animateCamera(CameraUpdate.newCameraPosition(
-                    CameraPosition(target: currentLocation!, zoom: 15),
-                  ));
-                },
+          ? Center(child: SpinKitThreeBounce(color: Colors.black, size: 30.0))
+          : Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+                color: isLockOn ? Colors.black : Colors.white
+            ),
+            child: Column(
+                      children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16.0),
+                child: Container(
+                  height: 300,
+                  child: Visibility(
+                    visible: !isLockOn,
+                    maintainState: true,
+                    child: GoogleMap(
+                      myLocationButtonEnabled: true,
+                      myLocationEnabled: false,
+                      zoomControlsEnabled: false,
+                      initialCameraPosition: CameraPosition(target: currentLocation!, zoom: 15),
+                      polylines: _polylines,
+                      markers: _markers,
+                      onMapCreated: (GoogleMapController controller) {
+                        mapController = controller;
+                        mapController.animateCamera(CameraUpdate.newCameraPosition(
+                          CameraPosition(target: currentLocation!, zoom: 15),
+                        ));
+                        _controller.complete(controller);
+                      },
+                    ),
+                  ),
+                ),
               ),
             ),
             Padding(
@@ -192,18 +563,18 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: _buildInformationCard('4.12', 'Distance (km)')),
+                      Expanded(child: _buildInformationCard(_totalDistance.toStringAsFixed(1), AppLocalizations.of(context)!.distanceTitle)),
                       SizedBox(width: 16),
-                      Expanded(child: _buildInformationCard('00:20:00', 'Total time')),
+                      Expanded(child: _buildInformationCard(_formatDuration(_totalTime), AppLocalizations.of(context)!.totalTimeTitle)),
                     ],
                   ),
                   SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: _buildInformationCard('15', 'Speed (km/h)')),
+                      Expanded(child: _buildInformationCard(_currentPace.toStringAsFixed(1), AppLocalizations.of(context)!.paceTitle)),
                       SizedBox(width: 16),
-                      Expanded(child: _buildInformationCard('200', 'Step')),
+                      Expanded(child: _buildInformationCard(_currentSteps.toString(), AppLocalizations.of(context)!.stepsTitle)),
                     ],
                   ),
                   Container(
@@ -211,12 +582,16 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                     width: double.infinity,
                     height: 20,
                     padding: EdgeInsets.fromLTRB(4, 0, 4, 0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.all(Radius.circular(7)),
-                      child: LinearProgressIndicator(
-                        value: controller.value,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
-                        backgroundColor: Colors.grey[300],
+                    child: Visibility(
+                      visible: /* limit > 0 && */!isLockOn,
+                      maintainState: true,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.redAccent),
+                          backgroundColor: Colors.grey[300],
+                        ),
                       ),
                     ),
                   ),
@@ -225,16 +600,22 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.stop_circle_outlined, size: 34.0),
+                        icon: Icon(Icons.stop_circle_outlined, size: 34.0, color: isLockOn ? Colors.white : Colors.black87),
                         onPressed: () {
-                          _onStopPressed();
+                          isStarting
+                            ? ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(AppLocalizations.of(context)!.stopStatus),
+                                ),
+                              )
+                            : _onStopPressed();
                         },
                       ),
                       Container(
                         height: 80.0,
                         width: 80,
                         decoration: BoxDecoration(
-                          color: Colors.redAccent,
+                          color: isLockOn ? Colors.black : Colors.redAccent,
                           shape: BoxShape.circle,
                         ),
                         child: IconButton(
@@ -244,14 +625,21 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                             color: Colors.white,
                           ),
                           onPressed: () {
-                            _toggleAnimation();
+                            _onPressedCount();
                           },
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.lock_outline_rounded, size: 30.0),
+                        icon: Icon(
+                            isLockOn ? Icons.lock_outline_rounded : Icons.lock_open_rounded, size: 30.0,
+                            color: isLockOn ? Colors.white : Colors.black
+                        ),
                         onPressed: () {
-                          //
+                          print(limit);
+                          print(_currentUserWeight);
+                          setState(() {
+                            isLockOn = !isLockOn;
+                          });
                         },
                       ),
                     ],
@@ -259,8 +647,9 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
                 ],
               ),
             ),
-          ],
-        ),
+            ],
+            ),
+          ),
       ),
     );
   }
@@ -271,7 +660,11 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
         height: 100.0,
         margin: EdgeInsets.symmetric(vertical: 4.0),
         child: Card(
-          color: Colors.grey[300],
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          color: isLockOn ? Colors.black : Colors.grey[300],
           child: Padding(
             padding: EdgeInsets.all(15.0),
             child: Column(
@@ -280,11 +673,17 @@ class _RunningState extends State<Running> with TickerProviderStateMixin {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 30.0, fontFamily: 'Blinker', fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: 30.0, fontFamily: Fonts.display_font, fontWeight: FontWeight.bold,
+                      color: isLockOn ? Colors.white : Colors.black87
+                  ),
                 ),
                 Text(
                   description,
-                  style: TextStyle(fontFamily: 'Blinker', fontSize: 12, fontWeight: FontWeight.bold,),
+                  style: TextStyle(
+                      fontFamily: Fonts.display_font, fontSize: 12, fontWeight: FontWeight.bold,
+                      color: isLockOn ? Colors.white : Colors.black87
+                  ),
                 ),
               ],
             ),

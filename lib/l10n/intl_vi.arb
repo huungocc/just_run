@@ -1,0 +1,62 @@
+{
+  "appName": "JustRun",
+  "reportCardTitle": "Thống kê",
+  "resultCardTitle": "Kết quả",
+  "runningCardTitle": "Chạy bộ",
+  "networkCardTitle": "Mạng",
+  "historyCardTitle": "Lịch sử",
+  "settingCardTitle": "Cài đặt",
+  "languageTitle": "Chọn ngôn ngữ:",
+
+  "freeButton": "Tự do",
+  "limitButton": "Đặt giới hạn",
+  "cancelButton": "Hủy",
+  "okButton": "OK",
+  "stopButton": "Dừng",
+  "exitButton": "Thoát",
+  "deleteButton": "Xóa",
+
+  "ageTitle": "Tuổi",
+  "heightTitle": "Chiều cao",
+  "weightTitle": "Cân nặng",
+
+  "dateTitle": "Ngày",
+  "distanceTitle": "Quãng đường (km)",
+  "totalTimeTitle": "Tổng thời gian",
+  "stepsTitle": "Bước chân",
+  "caloriesTitle": "Calo tiêu thụ",
+  "paceTitle": "Nhịp độ (phút/km)",
+
+  "offlineModeTitle": "Ngoại tuyến",
+  "changeInformationTitle": "Thông tin",
+  "enterLimitTitle": "Nhập giới hạn (km)",
+  "enterDailyLimitTitle": "Nhập giới hạn hằng ngày",
+
+  "exitTitle": "Thoát mà không lưu?",
+  "stopTitle": "Dừng chạy",
+  "deleteEachTitle": "Xóa lịch sử này?",
+  "deleteAllTitle": "Xóa tất cả lịch sử?",
+  "noHistoryFound": "Không tìm thấy lịch sử chạy!",
+
+  "internetStatus": "Không có kết nối!",
+
+  "stopStatus": "Vui lòng tạm dừng trước khi dừng!",
+  "reachLimitTitle": "Đã hoàn thành mục tiêu!",
+
+  "signinFailed": "Đăng nhập không thành công",
+  "signoutFailed": "Đăng xuất không thành công",
+  "userDataFailed": "Không tìm thấy dữ liệu cho",
+  "loadDataFailed": "Không thể tải dữ liệu",
+  "saveDataFailed": "Không thể lưu dữ liệu",
+  "deleteDataFailed": "Không thể xóa dữ liệu",
+  "activityRecognitionDenied": "Quyền Hoạt Động Thể Chất bị từ chối",
+  "locationDenied": "Quyền Vị Trí bị từ chối",
+  "notificationDenied": "Quyền Thông Báo bị từ chối",
+  "batteryDenied": "Quyền Chạy Trong Nền bị từ chối",
+  "shareDismissed": "Đã hủy chia sẻ",
+  "shareSuccessfully": "Chia sẻ thành công!",
+  "screenShotSaved": "Đã lưu ảnh chụp màn hình!",
+
+  "stepsChart": "Bước chân - 7 ngày gần đây",
+  "caloChart": "Calo tiêu thụ - 7 ngày gần đây"
+}

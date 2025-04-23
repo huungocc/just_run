@@ -1,0 +1,62 @@
+{
+  "appName": "JustRun",
+  "reportCardTitle": "Report",
+  "resultCardTitle": "Result",
+  "runningCardTitle": "Running",
+  "networkCardTitle": "Network",
+  "historyCardTitle": "History",
+  "settingCardTitle": "Setting",
+  "languageTitle": "Choose language:",
+
+  "freeButton": "Free",
+  "limitButton": "Limit",
+  "cancelButton": "Cancel",
+  "okButton": "OK",
+  "stopButton": "Stop",
+  "exitButton": "Exit",
+  "deleteButton": "Delete",
+
+  "ageTitle": "Age",
+  "heightTitle": "Height",
+  "weightTitle": "Weight",
+
+  "dateTitle": "Date",
+  "distanceTitle": "Distance (km)",
+  "totalTimeTitle": "Total time",
+  "stepsTitle": "Steps",
+  "caloriesTitle": "Calories",
+  "paceTitle": "Pace (min/km)",
+
+  "offlineModeTitle": "Offline Mode",
+  "changeInformationTitle": "Change Information",
+  "enterLimitTitle": "Enter your limit (km)",
+  "enterDailyLimitTitle": "Enter your daily limit",
+
+  "exitTitle": "Exit without saving?",
+  "stopTitle": "Stop running",
+  "deleteEachTitle": "Delete this history?",
+  "deleteAllTitle": "Delete all history records?",
+  "noHistoryFound": "No history records found!",
+
+  "internetStatus": "No connection!",
+
+  "stopStatus": "Please Pause before Stop!",
+  "reachLimitTitle": "Goal Completed!",
+
+  "signinFailed": "Failed to sign in",
+  "signoutFailed": "Failed to sign out",
+  "userDataFailed": "No user data found for",
+  "loadDataFailed": "Failed to load data",
+  "saveDataFailed": "Failed to save data",
+  "deleteDataFailed": "Failed to delete",
+  "activityRecognitionDenied": "Activity Recognition Denied",
+  "locationDenied": "Location Denied",
+  "notificationDenied": "Notification Denied",
+  "batteryDenied": "Ignore Battery Optimizations Denied",
+  "shareDismissed": "Share dismissed",
+  "shareSuccessfully": "Screenshot shared successfully!",
+  "screenShotSaved": "Screenshot saved!",
+
+  "stepsChart": "Steps - last 7 days",
+  "caloChart": "Calories - last 7 days"
+}
